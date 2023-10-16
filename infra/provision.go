@@ -21,8 +21,7 @@ const (
 )
 
 var (
-	self      *appsv1.Deployment = nil
-	clusterID string
+	self *appsv1.Deployment = nil
 )
 
 func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) (Provisioned, *logger.LoggedError) {
@@ -50,7 +49,6 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		if err != nil {
 			return logger.Error(lgr, fmt.Errorf("creating managed cluster: %w", err))
 		}
-		clusterID = ret.Cluster.GetId()
 
 		return nil
 	})
@@ -58,6 +56,50 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	if err := resEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
 	}
+
+	//Add dns zone resource- private and public
+	for idx := 0; idx < lenZones; idx++ {
+		func(idx int) {
+			resEg.Go(func() error {
+				zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, fmt.Sprintf("zone-%d-%s", idx, i.Suffix))
+				if err != nil {
+					return logger.Error(lgr, fmt.Errorf("creating zone: %w", err))
+				}
+				ret.Zones = append(ret.Zones, zone)
+				return nil
+			})
+		}(idx)
+	}
+	for idx := 0; idx < lenPrivateZones; idx++ {
+		func(idx int) {
+			resEg.Go(func() error {
+				privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, fmt.Sprintf("private-zone-%d-%s", idx, i.Suffix))
+				if err != nil {
+					return logger.Error(lgr, fmt.Errorf("creating private zone: %w", err))
+				}
+				ret.PrivateZones = append(ret.PrivateZones, privateZone)
+				return nil
+			})
+		}(idx)
+	}
+
+	resEg.Go(func() error {
+		ret.ContainerRegistry, err = clients.NewAcr(ctx, subscriptionId, i.ResourceGroup, "registry"+i.Suffix, i.Location)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating container registry: %w", err))
+		}
+
+		resEg.Go(func() error {
+			e2eRepoAndTag := "e2e:" + i.Suffix
+			if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
+				return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
+			}
+			ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
+			return nil
+		})
+
+		return nil
+	})
 
 	//Deploy external dns
 	err = deployExternalDNS(ctx, ret)
@@ -115,7 +157,7 @@ func deployExternalDNS(ctx context.Context, p Provisioned) error {
 	objs := manifests.ExternalDnsResources(exConfig.Conf, exConfig.Deploy, exConfig.DnsConfigs)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
-		fmt.Println("ERROR DEPLOYING EXT DNS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+		fmt.Println("Error Deploying External DNS")
 		return logger.Error(lgr, err)
 	}
 

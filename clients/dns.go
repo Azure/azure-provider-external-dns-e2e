@@ -107,6 +107,7 @@ func NewZone(ctx context.Context, subscriptionId, resourceGroup, name string, zo
 	}, nil
 }
 
+// change to get a specific type of record instead of a dns zone
 func (z *zone) GetDnsZone(ctx context.Context) (*armdns.Zone, error) {
 	lgr := logger.FromContext(ctx).With("name", z.name, "subscriptionId", z.subscriptionId, "resourceGroup", z.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)

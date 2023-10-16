@@ -99,11 +99,15 @@ type resourceGroup interface {
 }
 
 type Provisioned struct {
-	Name           string
-	Cluster        cluster
-	ResourceGroup  resourceGroup
-	SubscriptionId string
-	TenantId       string
+	Name              string
+	Cluster           cluster
+	ResourceGroup     resourceGroup
+	SubscriptionId    string
+	TenantId          string
+	Zones             []zone
+	PrivateZones      []privateZone
+	E2eImage          string
+	ContainerRegistry containerRegistry
 }
 
 type LoadableZone struct {
@@ -121,4 +125,10 @@ type LoadableProvisioned struct {
 	ResourceGroup                                                             arm.ResourceID // rg id is a little weird and can't be correctly parsed by azure.Resource so we have to use arm.ResourceID
 	SubscriptionId                                                            string
 	TenantId                                                                  string
+}
+
+type containerRegistry interface {
+	GetName() string
+	BuildAndPush(ctx context.Context, imageName, dockerfilePath string) error
+	Identifier
 }
