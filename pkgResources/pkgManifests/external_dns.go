@@ -87,7 +87,6 @@ type ExternalDnsConfig struct {
 
 // ExternalDnsResources returns Kubernetes objects required for external dns
 func ExternalDnsResources(conf *config.Config, self *appsv1.Deployment, externalDnsConfigs []*ExternalDnsConfig) []client.Object {
-	fmt.Println("In beginning of ExternalDNSResources function +++++++++++++++++++++++++++")
 	var objs []client.Object
 
 	// Can safely assume the namespace exists if using kube-system

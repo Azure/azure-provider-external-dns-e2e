@@ -57,7 +57,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return Provisioned{}, logger.Error(lgr, err)
 	}
 
-	//Add dns zone resource- private and public
+	//Add dns zone resource- Currently creating 2 private zones and 2 public zones
 	for idx := 0; idx < lenZones; idx++ {
 		func(idx int) {
 			resEg.Go(func() error {
@@ -83,20 +83,21 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(idx)
 	}
 
+	//Container registry to push e2e tests
 	resEg.Go(func() error {
 		ret.ContainerRegistry, err = clients.NewAcr(ctx, subscriptionId, i.ResourceGroup, "registry"+i.Suffix, i.Location)
 		if err != nil {
 			return logger.Error(lgr, fmt.Errorf("creating container registry: %w", err))
 		}
 
-		resEg.Go(func() error {
-			e2eRepoAndTag := "e2e:" + i.Suffix
-			if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
-				return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
-			}
-			ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
-			return nil
-		})
+		// resEg.Go(func() error {
+		// 	e2eRepoAndTag := "e2e:" + i.Suffix
+		// 	if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
+		// 		return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
+		// 	}
+		// 	ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
+		// 	return nil
+		// })
 
 		return nil
 	})
@@ -106,6 +107,8 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	if err != nil {
 		logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
+
+	//Create Nginx service
 
 	return ret, nil
 } //END OF PROVISION

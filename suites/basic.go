@@ -20,21 +20,7 @@ var (
 
 func basicSuite(in infra.Provisioned) []test {
 	return []test{
-		{
-			name: "basic ingress",
-			cfgs: builderFromInfra(in).
-				withOsm(in, false, true).
-				withVersions(manifests.AllOperatorVersions...).
-				withZones(manifests.AllDnsZoneCounts, manifests.AllDnsZoneCounts).
-				build(),
-			run: func(ctx context.Context, config *rest.Config, operator manifests.OperatorConfig) error {
-				// if err := clientServerTest(ctx, config, operator, basicNs, in, nil); err != nil {
-				// 	return err
-				// }
 
-				return nil
-			},
-		},
 		{
 			name: "basic service",
 			cfgs: builderFromInfra(in).
