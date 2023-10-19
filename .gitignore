@@ -31,6 +31,9 @@ coverage.out
 
 .env
 
+#all .zip files
+*.zip
 
+#files generated in code
 infra-config.json
-job-app-routing-operator-e2e.log
+job-app-routing-operator-e2e.log 
