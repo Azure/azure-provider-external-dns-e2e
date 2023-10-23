@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/clients"
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-	manifests "github.com/Azure/azure-provider-external-dns-e2e/pkgResources/pkgManifests"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/clients"
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
+	manifests "github.com/Azure/azure-provider-external-dns-e2e/pkgResources/pkgManifests"
 )
 
 const (
@@ -149,13 +150,13 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	//Deploy external dns
 	err = deployExternalDNS(ctx, ret)
 	if err != nil {
-		logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
+		return ret, logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
 
 	//Create Nginx service
 	err = deployNginx(ctx, ret)
 	if err != nil {
-		logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
+		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
 
 	return ret, nil

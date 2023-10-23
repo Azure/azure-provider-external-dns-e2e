@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
-	"golang.org/x/sync/errgroup"
 )
 
 func (p Provisioned) Deploy(ctx context.Context) error {
