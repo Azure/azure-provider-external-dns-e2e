@@ -51,7 +51,7 @@ func NewZone(ctx context.Context, subscriptionId, resourceGroup, name string, zo
 	lgr.Info("starting to create zone")
 	defer lgr.Info("finished creating zone")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -113,7 +113,7 @@ func (z *zone) GetDnsZone(ctx context.Context) (*armdns.Zone, error) {
 	lgr.Info("starting to get dns")
 	defer lgr.Info("finished getting dns")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -161,7 +161,7 @@ func NewPrivateZone(ctx context.Context, subscriptionId, resourceGroup, name str
 	lgr.Info("starting to create private zone")
 	defer lgr.Info("finished creating private zone")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -216,7 +216,7 @@ func (p *privateZone) GetDnsZone(ctx context.Context) (*armprivatedns.PrivateZon
 	lgr.Info("starting to get private dns")
 	defer lgr.Info("finished getting private dns")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -243,7 +243,7 @@ func (p *privateZone) LinkVnet(ctx context.Context, linkName, vnetId string) err
 	lgr.Info("starting to link vnet")
 	defer lgr.Info("finished linking vnet")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}

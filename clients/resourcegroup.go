@@ -44,7 +44,7 @@ func NewResourceGroup(ctx context.Context, subscriptionId, name, location string
 	lgr.Info("starting to create resource group")
 	defer lgr.Info("finished creating resource group")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}

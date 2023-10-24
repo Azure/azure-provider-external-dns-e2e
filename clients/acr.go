@@ -45,7 +45,7 @@ func NewAcr(ctx context.Context, subscriptionId, resourceGroup, name, location s
 	lgr.Info("starting to create acr")
 	defer lgr.Info("finished creating acr")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}

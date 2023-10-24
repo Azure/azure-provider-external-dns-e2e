@@ -13,7 +13,7 @@ import (
 
 var cred azcore.TokenCredential
 
-func getAzCred() (azcore.TokenCredential, error) {
+func GetAzCred() (azcore.TokenCredential, error) {
 	if cred != nil {
 		return cred, nil
 	}

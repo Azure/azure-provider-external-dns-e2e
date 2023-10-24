@@ -3,6 +3,8 @@ package infra
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -108,6 +110,7 @@ type Provisioned struct {
 	PrivateZones      []privateZone
 	E2eImage          string
 	ContainerRegistry containerRegistry
+	Service           *corev1.Service
 }
 
 type LoadableZone struct {

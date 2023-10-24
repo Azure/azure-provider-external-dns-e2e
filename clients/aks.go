@@ -96,7 +96,7 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 	lgr.Info("starting to create aks")
 	defer lgr.Info("finished creating aks")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -374,7 +374,7 @@ func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCom
 	lgr.Info("starting to run command")
 	defer lgr.Info("finished running command")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -427,7 +427,7 @@ func (a *aks) GetCluster(ctx context.Context) (*armcontainerservice.ManagedClust
 	lgr.Info("starting to get aks")
 	defer lgr.Info("finished getting aks")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -451,7 +451,7 @@ func (a *aks) GetVnetId(ctx context.Context) (string, error) {
 	lgr.Info("starting to get vnet id for aks")
 	defer lgr.Info("finished getting vnet id for aks")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return "", fmt.Errorf("getting az credentials: %w", err)
 	}

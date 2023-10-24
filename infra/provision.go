@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
@@ -154,10 +155,11 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	}
 
 	//Create Nginx service
-	err = deployNginx(ctx, ret)
+	serviceObj, err := deployNginx(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
+	ret.Service = serviceObj
 
 	return ret, nil
 }
@@ -196,7 +198,7 @@ func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, erro
 }
 
 // Creates Nginx deployment and service for testing
-func deployNginx(ctx context.Context, p Provisioned) error {
+func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, error) {
 
 	fmt.Println("Inside deploy Nginx function")
 
@@ -213,10 +215,10 @@ func deployNginx(ctx context.Context, p Provisioned) error {
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
 		fmt.Println("Error Deploying Nginx resources")
-		return logger.Error(lgr, err)
+		return nginxService, logger.Error(lgr, err)
 	}
 
-	return nil
+	return nginxService, nil
 
 }
 

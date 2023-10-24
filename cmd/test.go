@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"azure-provider-external-dns-e2e/logger"
+	"azure-provider-external-dns-e2e/suites"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -19,8 +22,8 @@ var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Runs e2e tests",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		//ctx := cmd.Context()
-		//lgr := logger.FromContext(ctx)
+		ctx := cmd.Context()
+		lgr := logger.FromContext(ctx)
 
 		file, err := os.Open(infraFile)
 		if err != nil {
@@ -47,10 +50,10 @@ var testCmd = &cobra.Command{
 			return fmt.Errorf("expected 1 provisioned infrastructure, got %d", len(provisioned))
 		}
 
-		//tests := suites.All(provisioned[0])
-		// if err := tests.Run(context.Background(), provisioned[0]); err != nil {
-		// 	return logger.Error(lgr, fmt.Errorf("test failed: %w", err))
-		// }
+		tests := suites.All(provisioned[0])
+		if err := tests.Run(context.Background(), provisioned[0]); err != nil {
+			return logger.Error(lgr, fmt.Errorf("test failed: %w", err))
+		}
 
 		return nil
 	},

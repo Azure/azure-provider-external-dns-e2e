@@ -41,7 +41,7 @@ func NewRoleAssignment(ctx context.Context, subscriptionId, scope, principalId s
 	lgr.Info("starting to create role assignment")
 	defer lgr.Info("finished creating role assignment")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
