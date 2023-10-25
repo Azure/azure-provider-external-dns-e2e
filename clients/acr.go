@@ -96,28 +96,26 @@ func (a *acr) GetId() string {
 }
 
 func (a *acr) BuildAndPush(ctx context.Context, imageName, dockerfilePath string) error {
+
 	lgr := logger.FromContext(ctx).With("image", imageName, "name", a.name, "resourceGroup", a.resourceGroup, "subscriptionId", a.subscriptionId)
 	ctx = logger.WithContext(ctx, lgr)
+
 	lgr.Info("starting to build and push")
 	defer lgr.Info("finished building and pushing")
 
 	start := time.Now()
 	for {
-		// Ideally, we'd use the sdk to build and push the image but I couldn't get it working.
-		// I matched everything on the az cli but wasn't able to get it working with the sdk.
-		// https://github.com/Azure/azure-cli/blob/5f9a8fa25cc1c980ebe5e034bd419c95a1c578e2/src/azure-cli/azure/cli/command_modules/acr/build.py#L25
-
-		fmt.Println(dockerfilePath + "    *****************************************************")
 
 		cmd := exec.Command("az", "acr", "build", "--registry", a.name, "--image", imageName, "--subscription", a.subscriptionId, "--resource-group", a.resourceGroup, dockerfilePath)
 		cmd.Stdout = newLogWriter(lgr, "building and pushing acr image: ", nil)
 		var errLog bytes.Buffer
 		cmd.Stderr = io.MultiWriter(&errLog, newLogWriter(lgr, "building and pushing acr image: ", to.Ptr(slog.LevelError)))
+		fmt.Println("Before cmd.Run()")
 		err := cmd.Run()
+		fmt.Println("After cmd.Run()")
 		if err == nil {
 			break
 		} else {
-			fmt.Println("*****************************************************")
 			fmt.Println("ERROR: ", err)
 			// if this regex matches the az cli can't find the acr, things just need more time to propagate.
 			// We've tried alternate strategies like polling the sdk to see if the acr exists but that

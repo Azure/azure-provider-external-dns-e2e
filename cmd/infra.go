@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/infra"
+	"azure-provider-external-dns-e2e/infra"
+
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +21,7 @@ var infraCmd = &cobra.Command{
 	Use:   "infra",
 	Short: "Sets up infrastructure for e2e tests",
 	RunE: func(cmd *cobra.Command, args []string) error {
+
 		infras := infra.Infras
 		if len(infraNames) > 0 {
 			infras = infras.FilterNames(infraNames)

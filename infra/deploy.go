@@ -7,8 +7,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
+	"azure-provider-external-dns-e2e/logger"
+	"azure-provider-external-dns-e2e/manifests"
 )
 
 func (p Provisioned) Deploy(ctx context.Context) error {
@@ -27,6 +27,7 @@ func (p Provisioned) Deploy(ctx context.Context) error {
 	}
 
 	objs := manifests.E2e(p.E2eImage, string(jsonLoadable))
+
 	if err := p.Cluster.Clean(ctx, objs); err != nil {
 		return logger.Error(lgr, err)
 	}
@@ -44,6 +45,9 @@ func Deploy(p []Provisioned) error {
 	defer lgr.Info("finished deploying tests")
 
 	var eg errgroup.Group
+
+	fmt.Println("Should print out all fields in provisioned struct: ")
+	fmt.Printf("%+v\n", p)
 
 	for _, provisioned := range p {
 		ctx := context.Background()

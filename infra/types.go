@@ -5,7 +5,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/clients"
+	"azure-provider-external-dns-e2e/clients"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
@@ -128,6 +129,11 @@ type LoadableProvisioned struct {
 	ResourceGroup                                                             arm.ResourceID // rg id is a little weird and can't be correctly parsed by azure.Resource so we have to use arm.ResourceID
 	SubscriptionId                                                            string
 	TenantId                                                                  string
+	Zones                                                                     []LoadableZone
+	PrivateZones                                                              []azure.Resource
+	E2eImage                                                                  string
+	ContainerRegistry                                                         azure.Resource
+	Service                                                                   *corev1.Service
 }
 
 type containerRegistry interface {

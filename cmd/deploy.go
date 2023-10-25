@@ -6,7 +6,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/infra"
+	"azure-provider-external-dns-e2e/infra"
+
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,7 @@ var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploys e2e tests on provisioned infrastructure",
 	RunE: func(cmd *cobra.Command, args []string) error {
+
 		file, err := os.Open(infraFile)
 		if err != nil {
 			return fmt.Errorf("opening file: %w", err)
@@ -40,9 +42,14 @@ var deployCmd = &cobra.Command{
 			return fmt.Errorf("generating provisioned infrastructure: %w", err)
 		}
 
+		fmt.Println("Printing out provisioned struct in deploy.go")
+		fmt.Printf("%+v\n", provisioned)
+
 		if err := infra.Deploy(provisioned); err != nil {
 			return fmt.Errorf("test failed: %w", err)
 		}
+
+		fmt.Println("================================ End of Deploy Command ==================================")
 
 		return nil
 	},

@@ -10,9 +10,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/clients"
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-	manifests "github.com/Azure/azure-provider-external-dns-e2e/pkgResources/pkgManifests"
+	"azure-provider-external-dns-e2e/clients"
+	"azure-provider-external-dns-e2e/logger"
+	manifests "azure-provider-external-dns-e2e/pkgResources/pkgManifests"
 )
 
 const (
@@ -57,10 +57,6 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return nil
 	})
 
-	if err := resEg.Wait(); err != nil {
-		return Provisioned{}, logger.Error(lgr, err)
-	}
-
 	//Add dns zone resource- Currently creating 1 private zone and 1 public zone
 	for idx := 0; idx < lenZones; idx++ {
 		func(idx int) {
@@ -93,18 +89,22 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		if err != nil {
 			return logger.Error(lgr, fmt.Errorf("creating container registry: %w", err))
 		}
+		resEg.Go(func() error {
+			e2eRepoAndTag := "e2e:" + i.Suffix
+			if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
+				return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
+			}
+			ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
 
-		// resEg.Go(func() error {
-		// 	e2eRepoAndTag := "e2e:" + i.Suffix
-		// 	if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
-		// 		return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
-		// 	}
-		// 	ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
-		// 	return nil
-		// })
+			return nil
+		})
 
 		return nil
 	})
+
+	if err := resEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
 
 	//setting permissions for private zones
 	var permEg errgroup.Group
@@ -147,6 +147,10 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(z)
 	}
 
+	if err := permEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
+
 	//put in errgroups?
 	//Deploy external dns
 	err = deployExternalDNS(ctx, ret)
@@ -166,6 +170,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 
 func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, error) {
 	lgr := logger.FromContext(context.Background())
+
 	lgr.Info("starting to provision all infrastructure")
 	defer lgr.Info("finished provisioning all infrastructure")
 
@@ -199,8 +204,6 @@ func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, erro
 
 // Creates Nginx deployment and service for testing
 func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, error) {
-
-	fmt.Println("Inside deploy Nginx function")
 
 	var objs []client.Object
 

@@ -196,6 +196,7 @@ func (a *aks) Deploy(ctx context.Context, objs []client.Object) error {
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to deploy resources")
+	lgr.Info("In AKS.GO Deploy ------------------------------------")
 	defer lgr.Info("finished deploying resources")
 
 	zip, err := zipManifests(objs)
