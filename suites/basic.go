@@ -3,58 +3,50 @@ package suites
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
-	"azure-provider-external-dns-e2e/manifests"
+	"k8s.io/client-go/rest"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-	"golang.org/x/sync/errgroup"
+	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	corev1 "k8s.io/api/core/v1"
-	netv1 "k8s.io/api/networking/v1"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var (
-	// basicNs is a map of namespaces that are used by the basic suite.
-	// the key is the dns zone name, and the value is the namespace that
-	// is used for the tests for that dns zone. Using shared namespaces
-	// allow us to appropriately test upgrade scenarios.
-	basicNs = make(map[string]*corev1.Namespace)
-)
-
 func basicSuite(in infra.Provisioned) []test {
+
+	ctx := context.Background()
+	lgr := logger.FromContext(ctx).With("name", "basicSuite")
+	ctx = logger.WithContext(ctx, lgr)
+
+	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
+	lgr.Info("IN BASIC SUITE >>>>>>>>>>>>>>>>>>>>>>>>>")
 	return []test{
+
 		{
-			name: "basic ingress",
-			cfgs: builderFromInfra(in).
-				withOsm(in, false, true).
-				withVersions(manifests.AllOperatorVersions...).
-				withZones(manifests.AllDnsZoneCounts, manifests.AllDnsZoneCounts).
-				build(),
-			run: func(ctx context.Context, config *rest.Config, operator manifests.OperatorConfig) error {
-				if err := clientServerTest(ctx, config, operator, basicNs, in, nil); err != nil {
-					return err
+			name: "public + A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			run: func(ctx context.Context, config *rest.Config) error {
+
+				//TODO: generate random IP address for testing instead of using 127.0.0.1,
+				//TODO: change dns relative zone name, standardize
+				_, err := createARecord(ctx, in.SubscriptionId, in.ResourceGroup.GetName(), in.Zones[0].GetName(), "dnsRelativeName", "127.0.0.1")
+
+				if err != nil {
+					lgr.Error("error getting A Record")
+					return fmt.Errorf("error getting A Record: %s", err)
 				}
-
-				return nil
-			},
-		},
-		{
-			name: "basic service",
-			cfgs: builderFromInfra(in).
-				withOsm(in, false, true).
-				withVersions(manifests.AllOperatorVersions...).
-				withZones(manifests.AllDnsZoneCounts, manifests.AllDnsZoneCounts).
-				build(),
-			run: func(ctx context.Context, config *rest.Config, operator manifests.OperatorConfig) error {
-				if err := clientServerTest(ctx, config, operator, basicNs, in, func(ingress *netv1.Ingress, service *corev1.Service, z zoner) error {
-					ingress = nil
+				//remove ingress param from modifier func, maybe zoner too?
+				if err := basicRecordTest(ctx, config, in, func(service *corev1.Service) error {
+					//TODO: service is currently nil, save ObjectMeta and corev1.ServiceSpec to infra-config.json?
 					annotations := service.GetAnnotations()
-					annotations["kubernetes.azure.com/ingress-host"] = z.GetNameserver()
-					//annotations["kubernetes.azure.com/tls-cert-keyvault-uri"] = in.Cert.GetId()
-					service.SetAnnotations(annotations)
-
+					publicDNSZoneName := in.Zones[0].GetName()
+					annotations["external-dns.alpha.kubernetes.io/hostname"] = publicDNSZoneName
+					service.SetAnnotations(annotations) //in-memory,need to save
+					//upsert done in test function below
 					return nil
 				}); err != nil {
 					return err
@@ -67,89 +59,88 @@ func basicSuite(in infra.Provisioned) []test {
 }
 
 // modifier is a function that can be used to modify the ingress and service
-type modifier func(ingress *netv1.Ingress, service *corev1.Service, z zoner) error
+type modifier func(service *corev1.Service) error
 
-// clientServerTest is a test that deploys a client and server application and ensures the client can reach the server.
-// This is the standard test used to check traffic flow is working.
-var clientServerTest = func(ctx context.Context, config *rest.Config, operator manifests.OperatorConfig, namespaces map[string]*corev1.Namespace, infra infra.Provisioned, mod modifier) error {
+var basicRecordTest = func(ctx context.Context, config *rest.Config, infra infra.Provisioned, mod modifier) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
+	//TODO: Is this client JUST needed to upsert? What does this do?
 	c, err := client.New(config, client.Options{})
 	if err != nil {
 		return fmt.Errorf("creating client: %w", err)
 	}
+	publicZone := infra.Zones[0]
 
-	var zones []zoner
-	switch operator.Zones.Public {
-	case manifests.DnsZoneCountNone:
-	case manifests.DnsZoneCountOne:
-		z := infra.Zones[0]
-		zones = append(zones, zone{name: z.GetName(), nameserver: z.GetNameservers()[0]})
-	case manifests.DnsZoneCountMultiple:
-		for _, z := range infra.Zones {
-			zones = append(zones, zone{name: z.GetName(), nameserver: z.GetNameservers()[0]})
-		}
-	}
-	switch operator.Zones.Private {
-	case manifests.DnsZoneCountNone:
-	case manifests.DnsZoneCountOne:
-		z := infra.PrivateZones[0]
-		zones = append(zones, zone{name: z.GetName(), nameserver: infra.Cluster.GetDnsServiceIp()})
-	case manifests.DnsZoneCountMultiple:
-		for _, z := range infra.PrivateZones {
-			zones = append(zones, zone{name: z.GetName(), nameserver: infra.Cluster.GetDnsServiceIp()})
+	//service obj
+	serviceObj := manifests.GetNginxServiceForTesting()
+
+	//updates service with annotation
+	if mod != nil {
+		if err := mod(serviceObj); err != nil {
+			return fmt.Errorf("modifying service: %w", err)
 		}
 	}
 
-	var eg errgroup.Group
-	for _, zone := range zones {
-		zone := zone
-		eg.Go(func() error {
-			lgr := logger.FromContext(ctx).With("zone", zone.GetName())
-			ctx := logger.WithContext(ctx, lgr)
-
-			if val, ok := namespaces[zone.GetName()]; !ok || val == nil {
-				namespaces[zone.GetName()] = manifests.UncollisionedNs()
-			}
-			ns := namespaces[zone.GetName()]
-
-			lgr.Info("creating namespace")
-			if err := upsert(ctx, c, ns); err != nil {
-				return fmt.Errorf("upserting ns: %w", err)
-			}
-
-			lgr = lgr.With("namespace", ns.Name)
-			ctx = logger.WithContext(ctx, lgr)
-
-			// testingResources := manifests.ClientAndServer(ns.Name, "e2e-testing", zone.GetName(), zone.GetNameserver(), infra.Cert.GetId())
-			// for _, object := range testingResources.Objects() {
-			// 	if err := upsert(ctx, c, object); err != nil {
-			// 		return fmt.Errorf("upserting resource: %w", err)
-			// 	}
-			// }
-
-			// if mod != nil {
-			// 	if err := mod(testingResources.Ingress, testingResources.Service, zone); err != nil {
-			// 		return fmt.Errorf("modifying ingress and service: %w", err)
-			// 	}
-			// }
-
-			// ctx = logger.WithContext(ctx, lgr.With("client", testingResources.Client.GetName(), "clientNamespace", testingResources.Client.GetNamespace()))
-			// if err := waitForAvailable(ctx, c, *testingResources.Client); err != nil {
-			// 	return fmt.Errorf("waiting for client deployment to be available: %w", err)
-			// }
-
-			lgr.Info("finished testing zone")
-			return nil
-		})
+	//Upserting service obj
+	if err := upsert(ctx, c, serviceObj); err != nil {
+		return fmt.Errorf("upserting service, %w", err)
 	}
 
-	if err := eg.Wait(); err != nil {
-		return fmt.Errorf("testing all zones: %w", err)
+	//TODO: change record type A to armDNS record type const
+	err = validateRecord(armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, publicZone.GetName(), 2, *serviceObj)
+	if err != nil {
+		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	}
-
 	lgr.Info("finished successfully")
+	return nil
+}
+
+// Checks to see whether record is created in Azure DNS
+// time out value param
+func validateRecord(recordType armdns.RecordType, rg, subscriptionId, dnsZoneName string, timeout time.Duration, service corev1.Service) error {
+	//TODO: timeout loop to wait on external dns
+	//for loop that tests to see if
+	//checks every timeout interval if external dns is done, once it's up and running, it exits
+
+	cred, err := getAzCred()
+	if err != nil {
+		return fmt.Errorf("getting az credentials: %w", err)
+	}
+
+	ctx := context.Background()
+
+	clientFactory, err := armdns.NewClientFactory(subscriptionId, cred, nil)
+	if err != nil {
+		log.Fatalf("failed to create client: %v", err)
+	}
+	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, dnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
+		Recordsetnamesuffix: nil,
+	})
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Fatalf("failed to advance page: %v", err)
+		}
+		for _, v := range page.Value {
+			//fmt.Println("Record type: ", *(v.Type))
+			fmt.Println("Ip address: ", *(v.Properties.ARecords[0]))
+
+			//grab a dns record who's dns zone name matches the service dns zone name. Then check to see if the ip address matches the
+			//ip address on the load balancer
+
+			//checking one Value at a time?
+			// if *(v.Type) != "Microsoft.Network/dnsZones/A" {
+			// 	return fmt.Errorf("A record not created in Azure DNS, test failed")
+			// }
+
+			//if (v.Properties.ARecords[0][IPv4Address]) -- TODO: check IP addr. Figure out what else we should check
+
+		}
+
+	}
+
 	return nil
 }
 
@@ -170,3 +161,25 @@ func (z zone) GetName() string {
 func (z zone) GetNameserver() string {
 	return z.nameserver
 }
+
+// If the HTTP response code is 200 as defined in example definition, your page structure would look as follows. Please pay attention that all the values in the output are fake values for just demo purposes.
+// page.RecordSetListResult = armdns.RecordSetListResult{
+// 	Value: []*armdns.RecordSet{
+// 		{
+// 			Name: to.Ptr("record1"),
+// 			Type: to.Ptr("Microsoft.Network/dnsZones/A"),
+// 			Etag: to.Ptr("00000000-0000-0000-0000-000000000000"),
+// 			ID: to.Ptr("/subscriptions/subid/resourceGroups/rg1/providers/Microsoft.Network/dnsZones/zone1/A/record1"),
+// 			Properties: &armdns.RecordSetProperties{
+// 				ARecords: []*armdns.ARecord{
+// 					{
+// 						IPv4Address: to.Ptr("127.0.0.1"),
+// 				}},
+// 				TTL: to.Ptr[int64](3600),
+// 				Fqdn: to.Ptr("record1.zone1"),
+// 				Metadata: map[string]*string{
+// 					"key1": to.Ptr("value1"),
+// 				},
+// 			},
+// 	}},
+// }

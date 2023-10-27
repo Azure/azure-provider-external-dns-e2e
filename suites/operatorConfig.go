@@ -1,7 +1,7 @@
 package suites
 
 import (
-	"azure-provider-external-dns-e2e/manifests"
+	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"

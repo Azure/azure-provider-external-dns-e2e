@@ -3,21 +3,21 @@ package tests
 import (
 	"context"
 
-	"azure-provider-external-dns-e2e/manifests"
+	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 
 	"k8s.io/client-go/rest"
 )
 
 type test interface {
 	GetName() string
-	Run(ctx context.Context, config *rest.Config, operator manifests.OperatorConfig) error
+	Run(ctx context.Context, config *rest.Config) error
 }
 
 // T is an interface for a single test
 type T interface {
 	// GetOperatorConfigs returns a slice of OperatorConfig structs that should be used for this test.
 	// All OperatorConfigs that are compatible should be returned.
-	GetOperatorConfigs() []manifests.OperatorConfig
+	//GetOperatorConfigs() []manifests.OperatorConfig
 	test
 }
 

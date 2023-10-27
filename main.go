@@ -1,8 +1,9 @@
 package main
 
 import (
-	"azure-provider-external-dns-e2e/cmd"
 	"fmt"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/cmd"
 )
 
 func main() {

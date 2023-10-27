@@ -31,3 +31,6 @@ unit:
 
 runinfra: 
 	go run ./main.go infra --subscription=${SUBSCRIPTION_ID} --tenant=${TENANT_ID} --names=${INFRA_NAMES} 
+
+deploy:
+	go run ./main.go deploy

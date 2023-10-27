@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"azure-provider-external-dns-e2e/infra"
+	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 
 	"github.com/spf13/cobra"
 )
@@ -41,9 +41,6 @@ var deployCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("generating provisioned infrastructure: %w", err)
 		}
-
-		fmt.Println("Printing out provisioned struct in deploy.go")
-		fmt.Printf("%+v\n", provisioned)
 
 		if err := infra.Deploy(provisioned); err != nil {
 			return fmt.Errorf("test failed: %w", err)

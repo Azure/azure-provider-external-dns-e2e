@@ -8,6 +8,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 )
 
+// Translate to .json for infra-config.json
 func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 	cluster, err := azure.ParseResourceID(p.Cluster.GetId())
 	if err != nil {
@@ -88,6 +89,7 @@ func ToProvisioned(l []LoadableProvisioned) ([]Provisioned, error) {
 	return ret, nil
 }
 
+// Loads Provisioned struct from infra-config.json
 func (l LoadableProvisioned) Provisioned() (Provisioned, error) {
 
 	zs := make([]zone, len(l.Zones))

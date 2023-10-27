@@ -7,8 +7,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"azure-provider-external-dns-e2e/logger"
-	"azure-provider-external-dns-e2e/manifests"
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
+	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 )
 
 func (p Provisioned) Deploy(ctx context.Context) error {
@@ -46,13 +46,10 @@ func Deploy(p []Provisioned) error {
 
 	var eg errgroup.Group
 
-	fmt.Println("Should print out all fields in provisioned struct: ")
-	fmt.Printf("%+v\n", p)
-
 	for _, provisioned := range p {
 		ctx := context.Background()
 		lgr := logger.FromContext(ctx)
-		ctx = logger.WithContext(ctx, lgr.With("infra", provisioned.Name))
+		ctx = logger.WithContext(ctx, lgr.With(">>>>>>>> infra", provisioned.Name))
 
 		eg.Go(func() error {
 			return provisioned.Deploy(ctx)

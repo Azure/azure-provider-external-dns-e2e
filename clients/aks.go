@@ -193,6 +193,7 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 }
 
 func (a *aks) Deploy(ctx context.Context, objs []client.Object) error {
+
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to deploy resources")
@@ -269,8 +270,10 @@ func (a *aks) Clean(ctx context.Context, objs []client.Object) error {
 }
 
 func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
+
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
+
 	lgr.Info("starting to wait for resources to be stable")
 	defer lgr.Info("finished waiting for resources to be stable")
 
@@ -306,12 +309,14 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 					lgr.Info("waiting for job complete")
 
 					outputFile := fmt.Sprintf("job-%s.log", obj.GetName()) // output to a file for jobs because jobs are naturally different from other deployment resources in that waiting for "stability" is waiting for them to complete
-					if err := os.RemoveAll(outputFile); err != nil {       // clean out previous log file, if doesn't exist returns nil
+
+					if err := os.RemoveAll(outputFile); err != nil { // clean out previous log file, if doesn't exist returns nil
 						return fmt.Errorf("removing previous job log file: %w", err)
 					}
 
 					getLogsFn := func() error { // right now this just dumps all logs on the pod, if we eventually have more logs
 						// than can be stored we will need to "stream" this by using the --since-time flag
+
 						if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
 							Command: to.Ptr(fmt.Sprintf("kubectl logs job/%s -n %s", obj.GetName(), ns)),
 						}, runCommandOpts{
@@ -325,14 +330,19 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 
 					// invoke command jobs are supposed to be short-lived, so we have to constantly poll for completion
 					for {
+
 						// check if job is complete
 						if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
 							Command: to.Ptr(fmt.Sprintf("kubectl wait --for=condition=complete --timeout=5s job/%s -n %s", obj.GetName(), ns)),
 						}, runCommandOpts{}); err == nil {
+							fmt.Println("job is complete, about to break -- NOT calling getLogsFn() *************************")
 							break // job is complete
 						} else {
+							//coming here
 							if !errors.Is(err, nonZeroExitCode) { // if the job is not complete, we will get a non-zero exit code
+								fmt.Println("Calling getLogs function ***********") //not coming here
 								getLogsFn()
+								fmt.Println("After calling getLogs function ***********")
 								return fmt.Errorf("waiting for job/%s to complete: %w", obj.GetName(), err)
 							}
 						}
@@ -341,7 +351,9 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 						if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
 							Command: to.Ptr(fmt.Sprintf("kubectl wait --for=condition=failed --timeout=5s job/%s -n %s", obj.GetName(), ns)),
 						}, runCommandOpts{}); err == nil {
+
 							getLogsFn()
+							fmt.Println("after Calling getLogsFunction() second time ******************")
 							return fmt.Errorf("job/%s failed", obj.GetName())
 						}
 					}
@@ -370,8 +382,10 @@ type runCommandOpts struct {
 }
 
 func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCommandRequest, opt runCommandOpts) error {
+	fmt.Println("IN RUN COMMAND ******************************")
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup, "command", *request.Command)
 	ctx = logger.WithContext(ctx, lgr)
+	lgr.Info("Starting to run command **************************")
 	lgr.Info("starting to run command")
 	defer lgr.Info("finished running command")
 
@@ -399,13 +413,27 @@ func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCom
 	if result.Properties != nil && result.Properties.Logs != nil {
 		logs = *result.Properties.Logs
 	}
+
+	fmt.Println(" ******************* Run command opts: ", opt.outputFile)
+	if opt.outputFile == "" {
+		fmt.Println("output file is empty ************** ")
+	}
+
+	lgr.Info("About to enter output file code**********************")
+	fmt.Println("About to enter output file code**********************")
 	if opt.outputFile != "" {
+		lgr.Info("Before Os.open file ********************")
+		fmt.Println("Before Os.open file ********************")
 		outputFile, err := os.OpenFile(opt.outputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
+			lgr.Info("Error creating Output file aks.go**********************")
+			fmt.Println("Error creating Output file aks.go**********************")
 			return fmt.Errorf("creating output file %s: %w", opt.outputFile, err)
 		}
 		defer outputFile.Close()
 
+		lgr.Info("About to write logs to file ******************")
+		fmt.Println("About to write logs to file ******************")
 		_, err = outputFile.WriteString(logs)
 		if err != nil {
 			return fmt.Errorf("writing output file %s: %w", opt.outputFile, err)

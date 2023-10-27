@@ -10,9 +10,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"azure-provider-external-dns-e2e/clients"
-	"azure-provider-external-dns-e2e/logger"
-	manifests "azure-provider-external-dns-e2e/pkgResources/pkgManifests"
+	"github.com/Azure/azure-provider-external-dns-e2e/clients"
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
+
+	manifests "github.com/Azure/azure-provider-external-dns-e2e/pkgResources/pkgManifests"
 )
 
 const (
@@ -147,6 +148,17 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(z)
 	}
 
+	permEg.Go(func() error {
+		principalId := ret.Cluster.GetPrincipalId()
+		role := clients.AcrPullRole
+		scope := ret.ContainerRegistry.GetId()
+		if _, err := clients.NewRoleAssignment(ctx, subscriptionId, scope, principalId, role); err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
+		}
+
+		return nil
+	})
+
 	if err := permEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
 	}
@@ -158,12 +170,12 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
 
-	//Create Nginx service
-	serviceObj, err := deployNginx(ctx, ret)
-	if err != nil {
-		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
-	}
-	ret.Service = serviceObj
+	//Create Nginx service -- TODO: remove this, we'll provision the service in the test only
+	// serviceObj, err := deployNginx(ctx, ret)
+	// if err != nil {
+	// 	return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
+	// }
+	// ret.Service = serviceObj
 
 	return ret, nil
 }

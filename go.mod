@@ -1,9 +1,8 @@
-module azure-provider-external-dns-e2e
+module github.com/Azure/azure-provider-external-dns-e2e
 
 go 1.20
 
 require (
-	github.com/Azure/azure-provider-external-dns-e2e v0.0.0-20231023151816-4234fb67de6e
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.8.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2 v2.1.1

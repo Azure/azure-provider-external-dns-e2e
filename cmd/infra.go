@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"azure-provider-external-dns-e2e/infra"
+	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 
 	"github.com/spf13/cobra"
 )
