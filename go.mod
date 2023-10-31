@@ -15,6 +15,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Azure/secrets-store-csi-driver-provider-azure v1.4.1
+	github.com/go-errors/errors v1.4.1
 	github.com/go-logr/logr v1.2.4
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.1

@@ -1,0 +1,2 @@
+NAMESPACE     NAME                           READY   STATUS    RESTARTS   AGE
+kube-system   external-dns-b8dc4579f-vnkmg   1/1     Running   0          17m

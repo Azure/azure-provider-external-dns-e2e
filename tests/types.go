@@ -4,13 +4,11 @@ import (
 	"context"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
-
-	"k8s.io/client-go/rest"
 )
 
 type test interface {
 	GetName() string
-	Run(ctx context.Context, config *rest.Config) error
+	Run(ctx context.Context) error
 }
 
 // T is an interface for a single test

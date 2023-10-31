@@ -62,7 +62,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	for idx := 0; idx < lenZones; idx++ {
 		func(idx int) {
 			resEg.Go(func() error {
-				zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, "testing-public-zone")
+				zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, "mscpubliczone")
 				if err != nil {
 					return logger.Error(lgr, fmt.Errorf("creating zone: %w", err))
 				}
@@ -74,7 +74,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	for idx := 0; idx < lenPrivateZones; idx++ {
 		func(idx int) {
 			resEg.Go(func() error {
-				privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, "testing-private-zone")
+				privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, "mscprivatezone")
 				if err != nil {
 					return logger.Error(lgr, fmt.Errorf("creating private zone: %w", err))
 				}
@@ -85,23 +85,23 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	}
 
 	//Container registry to push e2e tests
-	resEg.Go(func() error {
-		ret.ContainerRegistry, err = clients.NewAcr(ctx, subscriptionId, i.ResourceGroup, "registry"+i.Suffix, i.Location)
-		if err != nil {
-			return logger.Error(lgr, fmt.Errorf("creating container registry: %w", err))
-		}
-		resEg.Go(func() error {
-			e2eRepoAndTag := "e2e:" + i.Suffix
-			if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
-				return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
-			}
-			ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
+	// resEg.Go(func() error {
+	// 	ret.ContainerRegistry, err = clients.NewAcr(ctx, subscriptionId, i.ResourceGroup, "registry"+i.Suffix, i.Location)
+	// 	if err != nil {
+	// 		return logger.Error(lgr, fmt.Errorf("creating container registry: %w", err))
+	// 	}
+	// 	resEg.Go(func() error {
+	// 		e2eRepoAndTag := "e2e:" + i.Suffix
+	// 		if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
+	// 			return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
+	// 		}
+	// 		ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
 
-			return nil
-		})
+	// 		return nil
+	// 	})
 
-		return nil
-	})
+	// 	return nil
+	// })
 
 	if err := resEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
@@ -148,16 +148,16 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(z)
 	}
 
-	permEg.Go(func() error {
-		principalId := ret.Cluster.GetPrincipalId()
-		role := clients.AcrPullRole
-		scope := ret.ContainerRegistry.GetId()
-		if _, err := clients.NewRoleAssignment(ctx, subscriptionId, scope, principalId, role); err != nil {
-			return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
-		}
+	// permEg.Go(func() error {
+	// 	principalId := ret.Cluster.GetPrincipalId()
+	// 	role := clients.AcrPullRole
+	// 	scope := ret.ContainerRegistry.GetId()
+	// 	if _, err := clients.NewRoleAssignment(ctx, subscriptionId, scope, principalId, role); err != nil {
+	// 		return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
+	// 	}
 
-		return nil
-	})
+	// 	return nil
+	// })
 
 	if err := permEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
@@ -171,11 +171,12 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	}
 
 	//Create Nginx service -- TODO: remove this, we'll provision the service in the test only
-	// serviceObj, err := deployNginx(ctx, ret)
-	// if err != nil {
-	// 	return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
-	// }
-	// ret.Service = serviceObj
+	serviceObj, err := deployNginx(ctx, ret)
+	if err != nil {
+		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
+	}
+	fmt.Println("created service: ", serviceObj.ObjectMeta.Name)
+	ret.Service = serviceObj.ObjectMeta.Name
 
 	return ret, nil
 }
@@ -245,6 +246,8 @@ func deployExternalDNS(ctx context.Context, p Provisioned) error {
 	defer lgr.Info("finished deploying ext DNS")
 
 	exConfig := manifests.GetExampleConfigs()[0]
+	name := exConfig.DnsConfigs[0].Provider.ResourceName()
+	fmt.Println("name of public provider resource name for ext-dns: ", name)
 
 	objs := manifests.ExternalDnsResources(exConfig.Conf, exConfig.Deploy, exConfig.DnsConfigs)
 

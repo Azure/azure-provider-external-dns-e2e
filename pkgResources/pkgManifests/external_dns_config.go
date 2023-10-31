@@ -45,7 +45,7 @@ var (
 	exampleConfigs = []configStruct{
 		{
 			Name:       "full",
-			Conf:       &config.Config{NS: "test-namespace", ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3, Registry: "mcr.microsoft.com"},
+			Conf:       &config.Config{NS: "kube-system", ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3, Registry: "mcr.microsoft.com"},
 			Deploy:     nil,
 			DnsConfigs: []*ExternalDnsConfig{publicDnsConfig, privateDnsConfig},
 		},

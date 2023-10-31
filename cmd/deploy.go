@@ -42,9 +42,11 @@ var deployCmd = &cobra.Command{
 			return fmt.Errorf("generating provisioned infrastructure: %w", err)
 		}
 
-		if err := infra.Deploy(provisioned); err != nil {
-			return fmt.Errorf("test failed: %w", err)
-		}
+		fmt.Printf("%+v\n", provisioned)
+
+		// if err := infra.Deploy(provisioned); err != nil {
+		// 	return fmt.Errorf("test failed: %w", err)
+		// }
 
 		fmt.Println("================================ End of Deploy Command ==================================")
 

@@ -7,8 +7,6 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
-
-	"k8s.io/client-go/rest"
 )
 
 // All returns all test in all suites
@@ -26,24 +24,19 @@ func All(infra infra.Provisioned) tests.Ts {
 
 type test struct {
 	name string
-	//cfgs operatorCfgs
-	run func(ctx context.Context, config *rest.Config) error
+	run  func(ctx context.Context) error
 }
 
 func (t test) GetName() string {
 	return t.name
 }
 
-// func (t test) GetOperatorConfigs() []manifests.OperatorConfig {
-// 	return t.cfgs
-// }
-
-func (t test) Run(ctx context.Context, config *rest.Config) error {
+func (t test) Run(ctx context.Context) error {
 	if t.run == nil {
 		return fmt.Errorf("no run function provided for test %s", t.GetName())
 	}
 
-	return t.run(ctx, config)
+	return t.run(ctx)
 }
 
 var alwaysRun = func(infra infra.Provisioned) bool {

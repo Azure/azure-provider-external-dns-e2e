@@ -20,10 +20,10 @@ func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 		return LoadableProvisioned{}, fmt.Errorf("parsing resource group resource id: %w", err)
 	}
 
-	containerRegistry, err := azure.ParseResourceID(p.ContainerRegistry.GetId())
-	if err != nil {
-		return LoadableProvisioned{}, fmt.Errorf("parsing container registry resource id: %w", err)
-	}
+	// containerRegistry, err := azure.ParseResourceID(p.ContainerRegistry.GetId())
+	// if err != nil {
+	// 	return LoadableProvisioned{}, fmt.Errorf("parsing container registry resource id: %w", err)
+	// }
 
 	zones := make([]LoadableZone, len(p.Zones))
 	for i, zone := range p.Zones {
@@ -54,13 +54,15 @@ func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 		ClusterPrincipalId:  p.Cluster.GetPrincipalId(),
 		ClusterClientId:     p.Cluster.GetClientId(),
 		ClusterOptions:      p.Cluster.GetOptions(),
-		ContainerRegistry:   containerRegistry,
-		Zones:               zones,
-		PrivateZones:        privateZones,
-		ResourceGroup:       *resourceGroup,
-		SubscriptionId:      p.SubscriptionId,
-		TenantId:            p.TenantId,
-		E2eImage:            p.E2eImage,
+		//ContainerRegistry:   containerRegistry,
+		Zones:          zones,
+		PrivateZones:   privateZones,
+		ResourceGroup:  *resourceGroup,
+		SubscriptionId: p.SubscriptionId,
+		TenantId:       p.TenantId,
+		Service:        p.Service,
+		//ExternalDnsPodName: p.ExternalDnsPodName,
+		//E2eImage:            p.E2eImage,
 	}, nil
 
 }
@@ -102,14 +104,16 @@ func (l LoadableProvisioned) Provisioned() (Provisioned, error) {
 	}
 
 	return Provisioned{
-		Name:              l.Name,
-		Cluster:           clients.LoadAks(l.Cluster, l.ClusterDnsServiceIp, l.ClusterLocation, l.ClusterPrincipalId, l.ClusterClientId, l.ClusterOptions),
-		ContainerRegistry: clients.LoadAcr(l.ContainerRegistry),
-		Zones:             zs,
-		PrivateZones:      pzs,
-		ResourceGroup:     clients.LoadRg(l.ResourceGroup),
-		SubscriptionId:    l.SubscriptionId,
-		TenantId:          l.TenantId,
-		E2eImage:          l.E2eImage,
+		Name:    l.Name,
+		Cluster: clients.LoadAks(l.Cluster, l.ClusterDnsServiceIp, l.ClusterLocation, l.ClusterPrincipalId, l.ClusterClientId, l.ClusterOptions),
+		//ContainerRegistry: clients.LoadAcr(l.ContainerRegistry),
+		Zones:          zs,
+		PrivateZones:   pzs,
+		ResourceGroup:  clients.LoadRg(l.ResourceGroup),
+		SubscriptionId: l.SubscriptionId,
+		TenantId:       l.TenantId,
+		Service:        l.Service,
+		//ExternalDnsPodName: l.ExternalDnsPodName,
+		//E2eImage:          l.E2eImage,
 	}, nil
 }

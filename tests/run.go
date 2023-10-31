@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -21,17 +20,17 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("In RUN FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>")
 
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return fmt.Errorf("getting in-cluster config: %w", err)
-	}
+	// config, err := rest.InClusterConfig()
+	// if err != nil {
+	// 	return fmt.Errorf("getting in-cluster config: %w", err)
+	// }
 
 	runTestFn := func(t test, ctx context.Context) *logger.LoggedError {
 		lgr := logger.FromContext(ctx).With("test", t.GetName())
 		ctx = logger.WithContext(ctx, lgr)
 		lgr.Info("starting to run test")
 
-		if err := t.Run(ctx, config); err != nil {
+		if err := t.Run(ctx); err != nil {
 			return logger.Error(lgr, err)
 		}
 

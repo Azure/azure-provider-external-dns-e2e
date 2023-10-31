@@ -100,16 +100,17 @@ type resourceGroup interface {
 }
 
 type Provisioned struct {
-	Name              string
-	Cluster           cluster
-	ResourceGroup     resourceGroup
-	SubscriptionId    string
-	TenantId          string
-	Zones             []zone
-	PrivateZones      []privateZone
-	E2eImage          string
-	ContainerRegistry containerRegistry
-	//Service           *corev1.Service
+	Name           string
+	Cluster        cluster
+	ResourceGroup  resourceGroup
+	SubscriptionId string
+	TenantId       string
+	Zones          []zone
+	PrivateZones   []privateZone
+	//E2eImage          string
+	//ContainerRegistry containerRegistry
+	Service string
+	//ExternalDnsPodName string
 }
 
 type LoadableZone struct {
@@ -129,9 +130,10 @@ type LoadableProvisioned struct {
 	TenantId                                                                  string
 	Zones                                                                     []LoadableZone
 	PrivateZones                                                              []azure.Resource
-	E2eImage                                                                  string
-	ContainerRegistry                                                         azure.Resource
-	//Service                                                                   *corev1.Service
+	//E2eImage                                                                  string
+	//ContainerRegistry                                                         azure.Resource
+	Service string
+	//ExternalDnsPodName string
 }
 
 type containerRegistry interface {

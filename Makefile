@@ -34,3 +34,6 @@ runinfra:
 
 deploy:
 	go run ./main.go deploy
+
+test:
+	go run ./main.go test

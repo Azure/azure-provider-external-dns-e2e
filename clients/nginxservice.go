@@ -49,7 +49,7 @@ func NewNginxDeployment() *appsv1.Deployment {
 // returns nginx service
 func NewNginxService() *corev1.Service {
 	annotations := make(map[string]string)
-	annotations["external-dns.alpha.kubernetes.io/hostname"] = "server.example.com"
+	//annotations["external-dns.alpha.kubernetes.io/hostname"] = "server.example.com"
 
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -58,6 +58,7 @@ func NewNginxService() *corev1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "nginx-svc",
+			Namespace:   "kube-system",
 			Annotations: annotations,
 		},
 		Spec: corev1.ServiceSpec{
