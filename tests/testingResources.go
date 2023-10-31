@@ -3,15 +3,18 @@ package tests
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
+	appsv1 "k8s.io/api/apps/v1"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
@@ -25,19 +28,9 @@ type runCommandOpts struct {
 	outputFile string
 }
 
-type aks struct {
-	name, subscriptionId, resourceGroup string
-	id                                  string
-	dnsServiceIp                        string
-	location                            string
-	principalId                         string
-	clientId                            string
-	options                             map[string]struct{}
-}
-
 // addl param: objs []client.Object
 func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, serviceName string) error {
-	fmt.Println("In AnnotateService function --------------------")
+	//fmt.Println("In AnnotateService function --------------------")
 
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
@@ -47,37 +40,85 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 	//TODO: namespace parameter
 	cmd := fmt.Sprintf("kubectl annotate service --overwrite %s %s=%s -n kube-system", serviceName, key, value)
 	fmt.Println("About to Run Command: ", cmd)
-	if err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+	if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr(cmd),
 	}, runCommandOpts{}); err != nil {
 		return fmt.Errorf("running kubectl apply: %w", err)
 	}
 
-	return nil
+	//check annotation
+	cmd = fmt.Sprintf("kubectl get service %s -n kube-system -o jsonpath='{.metadata.annotations}'", serviceName)
+	annotationLog, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+		Command: to.Ptr(cmd),
+	}, runCommandOpts{})
+
+	if err != nil {
+		return fmt.Errorf("error getting service %s", serviceName)
+	}
+
+	var annotationSaved bool = false
+	if strings.Contains(annotationLog, key) && strings.Contains(annotationLog, value) {
+		annotationSaved = true
+	}
+
+	if annotationSaved {
+		return nil
+	} else {
+		return fmt.Errorf("service annotation was not saved")
+	}
 }
 
-// param: add suuport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
+// TODO: param: add suport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
+// TODO: Create logger for all fmt.Printlns in this fn
 func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName string) error {
-	fmt.Println("In wait for external dns function ----------------")
-	//kubectl get pods --selector=app=external-dns -A
+	//fmt.Println("In WaitForExternalDns() function ----------------")
 
-	if err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-		Command: to.Ptr("kubectl get pods --selector=app=external-dns -A"),
-	}, runCommandOpts{outputFile: "testLogs.txt"}); err != nil {
+	responseLog, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+		Command: to.Ptr("kubectl get deploy external-dns -n kube-system -o json"),
+	}, runCommandOpts{outputFile: "testLogs.txt"})
+
+	if err != nil {
+		fmt.Println("Error is not nil, not able to execute command for deployment")
 		return fmt.Errorf("unable to get pod for external-dns deployment")
 	}
 
-	// if err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-	// 	Command: to.Ptr(fmt.Sprintf("kubectl wait --for=condition=Ready pod/%s -n %s", "external-dns", "kube-system")),
-	// }, runCommandOpts{}); err != nil {
-	// 	return fmt.Errorf("waiting for pod/%s to be stable: %w", "external-dns", err)
-	// }
-	fmt.Println("Returning success from WaitForExternalDns() ----------------------")
-	return nil
+	deploy := &appsv1.Deployment{}
+	err = json.Unmarshal([]byte(responseLog), deploy)
+	if err != nil {
+		fmt.Println("error unmarshaling ===========")
+		return fmt.Errorf("error with unmarshaling json")
+	}
+
+	fmt.Println()
+	fmt.Println("About to check available replicas")
+
+	var extDNSReady bool = true
+	if deploy.Status.AvailableReplicas < 1 {
+		var i int = 0
+		for deploy.Status.AvailableReplicas < 1 {
+			fmt.Printf("======= ExternalDNS not available, checking again in %s seconds ====", timeout)
+			time.Sleep(timeout)
+			i++
+
+			if i >= 5 {
+				fmt.Println("Done waiting for External DNS, pod is NOT running")
+				extDNSReady = false
+			}
+		}
+	}
+
+	if extDNSReady {
+		fmt.Println("ExternalDNS Deployment is ready")
+		fmt.Println()
+		return nil
+	} else {
+		return fmt.Errorf("external dns deployment is not running in pod, check logs")
+	}
+
 }
 
-func RunCommand(ctx context.Context, subId, rg, clusterName string, request armcontainerservice.RunCommandRequest, opt runCommandOpts) error {
-	fmt.Println("IN RUN COMMAND for command for Tests +++++++++++++: ", request.Command)
+func RunCommand(ctx context.Context, subId, rg, clusterName string, request armcontainerservice.RunCommandRequest, opt runCommandOpts) (string, error) {
+	//fmt.Println("IN RUN COMMAND for command for Tests +++++++++++++ command: ", *request.Command)
 
 	lgr := logger.FromContext(ctx)
 	ctx = logger.WithContext(ctx, lgr)
@@ -85,60 +126,62 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	lgr.Info("starting to run command")
 	defer lgr.Info("finished running command for testing")
 
+	//fmt.Println("#1 Before getting az creds")
 	cred, err := getAzCred()
 	if err != nil {
-		return fmt.Errorf("getting az credentials: %w", err)
+		return "", fmt.Errorf("getting az credentials: %w", err)
 	}
 
+	//fmt.Println("#2 Before creating managed cluster client")
 	client, err := armcontainerservice.NewManagedClustersClient(subId, cred, nil)
 	if err != nil {
-		return fmt.Errorf("creating aks client: %w", err)
+		return "", fmt.Errorf("creating aks client: %w", err)
 	}
 
+	//fmt.Println("#3 Before BeginRunCommand() call")
 	poller, err := client.BeginRunCommand(ctx, rg, clusterName, request, nil)
 	if err != nil {
-		return fmt.Errorf("starting run command: %w", err)
+		return "", fmt.Errorf("starting run command: %w", err)
 	}
 
+	//fmt.Println("#4 Before Poller PollUnitlDone() call")
 	result, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("running command: %w", err)
+		return "", fmt.Errorf("running command: %w", err)
 	}
 
-	fmt.Println("------------ result: ", result)
-	fmt.Println("Got here #5 =========================")
-
+	//fmt.Println("#5 Before Checking Logs")
 	logs := ""
 	if result.Properties != nil && result.Properties.Logs != nil {
 		logs = *result.Properties.Logs
-		fmt.Println("logs from run command in testing: ", logs)
+		//fmt.Println("logs from run command in testing: ", logs)
 	}
-	fmt.Println("Got here #6 =========================")
 
+	//fmt.Println("#5 Before output file code")
 	if opt.outputFile != "" {
 
 		outputFile, err := os.OpenFile(opt.outputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 
-			return fmt.Errorf("creating output file %s: %w", opt.outputFile, err)
+			return logs, fmt.Errorf("creating output file %s: %w", opt.outputFile, err)
 		}
 		defer outputFile.Close()
 		_, err = outputFile.WriteString(logs)
 		if err != nil {
-			return fmt.Errorf("writing output file %s: %w", opt.outputFile, err)
+			return logs, fmt.Errorf("writing output file %s: %w", opt.outputFile, err)
 		}
 	} else {
-		lgr.Info("command output: " + logs)
+		lgr.Info("command logs: " + logs)
 	}
 
-	fmt.Println("Got here #7 =========================")
-
+	//fmt.Println("#6 Before checking exit code")
 	if *result.Properties.ExitCode != 0 {
 		lgr.Info(fmt.Sprintf("command failed with exit code %d", *result.Properties.ExitCode))
-		return nonZeroExitCode
+		return logs, nonZeroExitCode
 	}
 
-	return nil
+	//fmt.Println("returning logs with no error >>>>>>>>>>>>>>>>>>>>>")
+	return logs, nil
 }
 
 func getAzCred() (azcore.TokenCredential, error) {

@@ -70,7 +70,6 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 		lgr.Error("Error annotating service", err)
 	}
 
-	//TODO: change record type A to armDNS record type const
 	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 2, serviceName)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
@@ -93,27 +92,22 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
 
-	lgr.Info("waiting for pod to be ready")
 	err := tests.WaitForExternalDns(ctx, timeout, subscriptionId, rg, clusterName)
 	if err != nil {
-		return fmt.Errorf("Error waiting for external dns to run %w", err)
+		return fmt.Errorf("error waiting for ExternalDNS to start running %w", err)
 	}
-
-	fmt.Println()
-	fmt.Println("-----------------Sleeping -------------------------")
-	time.Sleep(10 * time.Second)
 
 	cred, err := clients.GetAzCred()
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}
-
-	ctx = context.Background()
+	// ctx = context.Background()
 
 	fmt.Println("#1 Creating ClientFactory function ---------------------")
 	clientFactory, err := armdns.NewClientFactory(subscriptionId, cred, nil)
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
+		return fmt.Errorf("failed to create armdns.ClientFactory")
 	}
 	fmt.Println("#2 Creating pager ---------------------")
 	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, dnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
@@ -126,9 +120,10 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 
 		if err != nil {
 			log.Fatalf("failed to advance page: %v", err)
+			return fmt.Errorf("failed to advance page for record sets")
 		}
 		for _, v := range page.Value {
-			fmt.Println("In Loop, dns record created ======================= :)")
+			fmt.Println("In Loop!  dns record created ======================= :)")
 			//fmt.Println("Record type: ", *(v.Type))
 			fmt.Println("#4 =========== Ip address: ", *(v.Properties.ARecords[0]))
 			fmt.Println("#5 =========== Zone name: ", *(v.Properties.Fqdn))
