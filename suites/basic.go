@@ -64,6 +64,8 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	fmt.Println("Infra Service name: ", infra.Service)
 
 	serviceName := infra.Service
+	//service.beta.kubernetes.io/azure-dns-label-name: dns-zone-name
+
 	err = tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), serviceName)
 	if err != nil {
 		//fmt.Println(err.(*errors.Error).ErrorStack())
@@ -101,7 +103,6 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}
-	// ctx = context.Background()
 
 	fmt.Println("#1 Creating ClientFactory function ---------------------")
 	clientFactory, err := armdns.NewClientFactory(subscriptionId, cred, nil)

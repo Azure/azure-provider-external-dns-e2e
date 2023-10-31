@@ -56,12 +56,16 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 		return fmt.Errorf("error getting service %s", serviceName)
 	}
 
+	//TODO: check formatting, not just that annotation key, value exist
 	var annotationSaved bool = false
 	if strings.Contains(annotationLog, key) && strings.Contains(annotationLog, value) {
 		annotationSaved = true
 	}
 
 	if annotationSaved {
+		fmt.Println("===============================")
+		fmt.Println("Service Annotation saved")
+		fmt.Println("===============================")
 		return nil
 	} else {
 		return fmt.Errorf("service annotation was not saved")
@@ -90,6 +94,7 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 	}
 
 	fmt.Println()
+	fmt.Println("=======================================")
 	fmt.Println("About to check available replicas")
 
 	var extDNSReady bool = true
@@ -109,6 +114,7 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 
 	if extDNSReady {
 		fmt.Println("ExternalDNS Deployment is ready")
+		fmt.Println("=======================================")
 		fmt.Println()
 		return nil
 	} else {
@@ -171,7 +177,7 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 			return logs, fmt.Errorf("writing output file %s: %w", opt.outputFile, err)
 		}
 	} else {
-		lgr.Info("command logs: " + logs)
+		lgr.Info("using command logs, no output file specified")
 	}
 
 	//fmt.Println("#6 Before checking exit code")
