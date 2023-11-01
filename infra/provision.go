@@ -84,25 +84,6 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(idx)
 	}
 
-	//Container registry to push e2e tests
-	// resEg.Go(func() error {
-	// 	ret.ContainerRegistry, err = clients.NewAcr(ctx, subscriptionId, i.ResourceGroup, "registry"+i.Suffix, i.Location)
-	// 	if err != nil {
-	// 		return logger.Error(lgr, fmt.Errorf("creating container registry: %w", err))
-	// 	}
-	// 	resEg.Go(func() error {
-	// 		e2eRepoAndTag := "e2e:" + i.Suffix
-	// 		if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
-	// 			return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
-	// 		}
-	// 		ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
-
-	// 		return nil
-	// 	})
-
-	// 	return nil
-	// })
-
 	if err := resEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
 	}
@@ -147,17 +128,6 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 			})
 		}(z)
 	}
-
-	// permEg.Go(func() error {
-	// 	principalId := ret.Cluster.GetPrincipalId()
-	// 	role := clients.AcrPullRole
-	// 	scope := ret.ContainerRegistry.GetId()
-	// 	if _, err := clients.NewRoleAssignment(ctx, subscriptionId, scope, principalId, role); err != nil {
-	// 		return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
-	// 	}
-
-	// 	return nil
-	// })
 
 	if err := permEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
@@ -245,11 +215,38 @@ func deployExternalDNS(ctx context.Context, p Provisioned) error {
 	lgr.Info("deploying external DNS onto cluster")
 	defer lgr.Info("finished deploying ext DNS")
 
-	exConfig := manifests.GetExampleConfigs()[0]
-	name := exConfig.DnsConfigs[0].Provider.ResourceName()
-	fmt.Println("name of public provider resource name for ext-dns: ", name)
+	var publicZoneNames []string
+	zones := p.Zones
+	i := 0
+	for i < lenZones {
+		publicZoneNames = append(publicZoneNames, zones[i].GetName())
+		i++
+	}
 
-	objs := manifests.ExternalDnsResources(exConfig.Conf, exConfig.Deploy, exConfig.DnsConfigs)
+	var privateZoneNames []string
+	privateZones := p.PrivateZones
+	i = 0
+	for i < lenZones {
+		privateZoneNames = append(privateZoneNames, privateZones[i].GetName())
+		i++
+	}
+
+	if len(publicZoneNames) == 0 || len(privateZoneNames) == 0 {
+		return fmt.Errorf("public and/or private zones were not created/provided")
+	}
+
+	fmt.Println("Public zone names: ", publicZoneNames)
+	fmt.Println("Private zone names: ", privateZoneNames)
+
+	//TODO: is this the correct Tenant ID?
+	publicDnsConfig := manifests.GetPublicDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), publicZoneNames)
+	privateDnsConfig := manifests.GetPrivateDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), privateZoneNames)
+
+	//TODO: correct value for cluster uid?
+	exConfig := manifests.SetExampleConfig(p.Cluster.GetId(), publicDnsConfig, privateDnsConfig)
+	currentConfig := exConfig[0] //currently only using one config from external_dns_config.go
+
+	objs := manifests.ExternalDnsResources(currentConfig.Conf, currentConfig.Deploy, currentConfig.DnsConfigs)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
 		fmt.Println("Error Deploying External DNS")

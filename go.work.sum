@@ -10,11 +10,12 @@ github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/internal v0.8.0 h1:T028g
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/internal v0.8.0/go.mod h1:cw4zVQgBby0Z5f2v0itn6se2dDP17nTjbZFXW5uPyHA=
 github.com/cjlapao/common-go v0.0.39 h1:bAAUrj2B9v0kMzbAOhzjSmiyDy+rd56r2sy7oEiQLlA=
 github.com/cjlapao/common-go v0.0.39/go.mod h1:M3dzazLjTjEtZJbbxoA5ZDiGCiHmpwqW9l4UWaddwOA=
-github.com/go-errors/errors v1.4.1 h1:IvVlgbzSsaUNudsw5dcXSzF3EWyXTi5XrAdngnuhRyg=
+github.com/evanphx/json-patch v5.6.0+incompatible h1:jBYDEEiFBPxA0v50tFdvOzQQTCvpL6mnFh5mB2/l16U=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=
 github.com/go-logr/stdr v1.2.2/go.mod h1:mMo/vtBO5dYbehREoey6XUKy/eSumjCCveDpRre4VKE=
 github.com/golang-jwt/jwt v3.2.1+incompatible h1:73Z+4BJcrTC+KczS6WvTPvRGOp1WmfEP4Q1lOd9Z/+c=
+github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
 github.com/microsoft/kiota-abstractions-go v1.2.2 h1:2i/zHAxjbONp7Q5+qN3NEF1zuf5YWMKCLxbkVqPm6uQ=
 github.com/microsoft/kiota-abstractions-go v1.2.2/go.mod h1:mWUfljJB88owshlQl6LhnqlEHmWyutTPK7A/L7AGnNw=
 github.com/microsoft/kiota-authentication-azure-go v1.0.0 h1:29FNZZ/4nnCOwFcGWlB/sxPvWz487HA2bXH8jR5k2Rk=
@@ -33,7 +34,6 @@ github.com/microsoftgraph/msgraph-sdk-go v1.20.0 h1:Hi8URs+Ll07+GojbY9lyuYUMj8rx
 github.com/microsoftgraph/msgraph-sdk-go v1.20.0/go.mod h1:UTUjxLPExc1K+YLmFeyEyep6vYd1GOj2bLMSd7/lPWE=
 github.com/microsoftgraph/msgraph-sdk-go-core v1.0.0 h1:7NWTfyXvOjoizW7PmxNp3+8wCKPgpODs/D1cUZ3fkAY=
 github.com/microsoftgraph/msgraph-sdk-go-core v1.0.0/go.mod h1:tQb4q3YMIj2dWhhXhQSJ4ELpol931ANKzHSYK5kX1qE=
-github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/std-uritemplate/std-uritemplate/go v0.0.42 h1:rG+XlE4drkVWs2NLfGS15N+vg+CUcjXElQKvJ0fctlI=
 github.com/std-uritemplate/std-uritemplate/go v0.0.42/go.mod h1:Qov4Ay4U83j37XjgxMYevGJFLbnZ2o9cEOhGufBKgKY=
 go.opentelemetry.io/otel v1.18.0 h1:TgVozPGZ01nHyDZxK5WGPFB9QexeTMXEH7+tIClWfzs=
@@ -42,3 +42,5 @@ go.opentelemetry.io/otel/metric v1.18.0 h1:JwVzw94UYmbx3ej++CwLUQZxEODDj/pOuTCvz
 go.opentelemetry.io/otel/metric v1.18.0/go.mod h1:nNSpsVDjWGfb7chbRLUNW+PBNdcSTHD4Uu5pfFMOI0k=
 go.opentelemetry.io/otel/trace v1.18.0 h1:NY+czwbHbmndxojTEKiSMHkG2ClNH2PwmcHrdo0JY10=
 go.opentelemetry.io/otel/trace v1.18.0/go.mod h1:T2+SGJGuYZY3bjj5rgh/hN7KIrlpWC5nS8Mjvzckz+0=
+go.uber.org/goleak v1.2.1 h1:NBol2c7O1ZokfZ0LEU9K6Whx/KnwvepVetCUhtKja4A=
+k8s.io/component-base v0.28.1 h1:LA4AujMlK2mr0tZbQDZkjWbdhTV5bRyEyAFe0TJxlWg=

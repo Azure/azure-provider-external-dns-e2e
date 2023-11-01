@@ -64,15 +64,14 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	fmt.Println("Infra Service name: ", infra.Service)
 
 	serviceName := infra.Service
-	//service.beta.kubernetes.io/azure-dns-label-name: dns-zone-name
+	//service.beta.kubernetes.io/azure-dns-label-name: dns-zone-name   --- for CNAME?
 
 	err = tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), serviceName)
 	if err != nil {
-		//fmt.Println(err.(*errors.Error).ErrorStack())
 		lgr.Error("Error annotating service", err)
 	}
 
-	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 2, serviceName)
+	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, serviceName)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {

@@ -84,6 +84,20 @@ type ExternalDnsConfig struct {
 
 // ExternalDnsResources returns Kubernetes objects required for external dns
 func ExternalDnsResources(conf *config.Config, self *appsv1.Deployment, externalDnsConfigs []*ExternalDnsConfig) []client.Object {
+
+	fmt.Println()
+	fmt.Println("In External Dns Resources, values used in creating objects: ")
+	fmt.Println("--------------------------------------------------------------")
+	fmt.Println()
+	fmt.Println("======================================================")
+	fmt.Println("rg: ", externalDnsConfigs[0].ResourceGroup)
+	fmt.Println("subscription id: ", externalDnsConfigs[0].Subscription)
+	fmt.Println("tenant id: ", externalDnsConfigs[0].TenantId)
+	fmt.Println("zone resource paths: ", externalDnsConfigs[0].DnsZoneResourceIDs)
+	fmt.Println("provider: ", externalDnsConfigs[0].Provider)
+	fmt.Println("======================================================")
+	fmt.Println()
+
 	var objs []client.Object
 
 	// Can safely assume the namespace exists if using kube-system
@@ -192,6 +206,7 @@ func newExternalDNSClusterRoleBinding(conf *config.Config, externalDnsConfig *Ex
 }
 
 func NewExternalDNSConfigMap(conf *config.Config, externalDnsConfig *ExternalDnsConfig) (*corev1.ConfigMap, string) {
+
 	js, err := json.Marshal(&map[string]interface{}{
 		"tenantId":                    externalDnsConfig.TenantId,
 		"subscriptionId":              externalDnsConfig.Subscription,
@@ -262,6 +277,7 @@ func newExternalDNSDeployment(conf *config.Config, externalDnsConfig *ExternalDn
 						Args: append([]string{
 							"--provider=" + externalDnsConfig.Provider.String(),
 							"--source=ingress",
+							"--source=service",
 							"--interval=" + conf.DnsSyncInterval.String(),
 							"--txt-owner-id=" + conf.ClusterUid,
 						}, domainFilters...),
