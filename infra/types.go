@@ -99,6 +99,12 @@ type resourceGroup interface {
 	Identifier
 }
 
+type serviceInfoInterface interface {
+	GetName() string
+	GetIpAddr() string
+	Identifier
+}
+
 type Provisioned struct {
 	Name           string
 	Cluster        cluster
@@ -107,10 +113,7 @@ type Provisioned struct {
 	TenantId       string
 	Zones          []zone
 	PrivateZones   []privateZone
-	//E2eImage          string
-	//ContainerRegistry containerRegistry
-	Service string
-	//ExternalDnsPodName string
+	Service        serviceInfoInterface
 }
 
 type LoadableZone struct {
@@ -130,14 +133,5 @@ type LoadableProvisioned struct {
 	TenantId                                                                  string
 	Zones                                                                     []LoadableZone
 	PrivateZones                                                              []azure.Resource
-	//E2eImage                                                                  string
-	//ContainerRegistry                                                         azure.Resource
-	Service string
-	//ExternalDnsPodName string
-}
-
-type containerRegistry interface {
-	GetName() string
-	BuildAndPush(ctx context.Context, imageName, dockerfilePath string) error
-	Identifier
+	Service                                                                   arm.ResourceID
 }

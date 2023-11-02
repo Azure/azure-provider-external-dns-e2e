@@ -141,12 +141,14 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	}
 
 	//Create Nginx service -- TODO: remove this, we'll provision the service in the test only
-	serviceObj, err := deployNginx(ctx, ret)
+	svcInfo, serviceObj, err := deployNginx(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
-	fmt.Println("created service: ", serviceObj.ObjectMeta.Name)
-	ret.Service = serviceObj.ObjectMeta.Name
+
+	//svcInfo := ServiceInfo{name: serviceObj.ObjectMeta.Name, ipAddr: serviceObj.Spec.LoadBalancerIP}
+	fmt.Println("load balancer: ", serviceObj.Spec.LoadBalancerIP)
+	ret.Service = svcInfo
 
 	return ret, nil
 }
@@ -186,7 +188,7 @@ func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, erro
 }
 
 // Creates Nginx deployment and service for testing
-func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, error) {
+func deployNginx(ctx context.Context, p Provisioned) (*clients.SvcInfo, *corev1.Service, error) {
 
 	var objs []client.Object
 
@@ -195,16 +197,16 @@ func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, error) {
 	defer lgr.Info("finished deploying nginx resources")
 
 	nginxDeployment := clients.NewNginxDeployment()
-	nginxService := clients.NewNginxService()
+	svcInfo, nginxService := clients.NewNginxService()
 	objs = append(objs, nginxDeployment)
 	objs = append(objs, nginxService)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
 		fmt.Println("Error Deploying Nginx resources")
-		return nginxService, logger.Error(lgr, err)
+		return svcInfo, nginxService, logger.Error(lgr, err)
 	}
 
-	return nginxService, nil
+	return svcInfo, nginxService, nil
 
 }
 

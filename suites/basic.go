@@ -68,15 +68,16 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	fmt.Println("Infra zone name: ", publicZone.GetName())
 	fmt.Println("Infra Service name: ", infra.Service)
 
-	serviceName := infra.Service
+	svcInfo := infra.Service
+
 	//service.beta.kubernetes.io/azure-dns-label-name: dns-zone-name   --- for CNAME?
 
-	err = tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), serviceName)
+	err = tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), svcInfo.GetName())
 	if err != nil {
 		lgr.Error("Error annotating service", err)
 	}
 
-	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, serviceName)
+	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, infra)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
@@ -88,7 +89,7 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 
 // Checks to see whether record is created in Azure DNS
 // time out value param
-func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, dnsZoneName string, timeout time.Duration, serviceName string) error {
+func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, dnsZoneName string, timeout time.Duration, infra infra.Provisioned) error {
 	fmt.Println()
 	fmt.Println("#0 In validateRecord() function ---------------------")
 
@@ -120,6 +121,8 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 		Recordsetnamesuffix: nil,
 	})
 
+	svc := infra.Service
+
 	for pager.More() {
 		fmt.Println("#3 In pager ----------------")
 		page, err := pager.NextPage(ctx)
@@ -128,21 +131,21 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 			log.Fatalf("failed to advance page: %v", err)
 			return fmt.Errorf("failed to advance page for record sets")
 		}
+
 		for _, v := range page.Value {
 			fmt.Println("In Loop!  dns record created ======================= :)")
 			//fmt.Println("Record type: ", *(v.Type))
-			fmt.Println("#4 =========== Ip address: ", v.Properties.ARecords[0].IPv4Address)
-			fmt.Println("#5 =========== Zone name: ", v.Properties.Fqdn)
+			//TODO: Switch/ case for every type of dns record
+			currZoneName := *(v.Properties.Fqdn)
+			ipAddr := *(v.Properties.ARecords[0].IPv4Address)
+			fmt.Println("#4 =========== Ip address: ", ipAddr)
+			fmt.Println("#5 =========== Zone name: ", currZoneName)
 
+			if currZoneName == dnsZoneName && ipAddr == svc.GetIpAddr() {
+
+			}
 			//TODO: grab a dns record whose dns zone name matches the service dns zone name. Then check to see if the ip address matches the
 			//ip address on the load balancer
-
-			//checking one Value at a time?
-			// if *(v.Type) != "Microsoft.Network/dnsZones/A" {
-			// 	return fmt.Errorf("A record not created in Azure DNS, test failed")
-			// }
-
-			//if (v.Properties.ARecords[0][IPv4Address]) -- TODO: check IP addr. Figure out what else we should check
 
 		}
 

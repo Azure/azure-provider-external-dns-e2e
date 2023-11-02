@@ -211,7 +211,7 @@ func NewExternalDNSConfigMap(conf *config.Config, externalDnsConfig *ExternalDns
 		"tenantId":                    externalDnsConfig.TenantId,
 		"subscriptionId":              externalDnsConfig.Subscription,
 		"resourceGroup":               externalDnsConfig.ResourceGroup,
-		"userAssignedIdentityID":      conf.MSIClientID,
+		"userAssignedIdentityID":      conf.MSIClientID, //TODO: remove?
 		"useManagedIdentityExtension": true,
 		"cloud":                       conf.Cloud,
 		"location":                    conf.Location,
@@ -247,7 +247,7 @@ func newExternalDNSDeployment(conf *config.Config, externalDnsConfig *ExternalDn
 		domainFilters = append(domainFilters, fmt.Sprintf("--domain-filter=%s", parsedZone.ResourceName))
 	}
 
-	podLabels := GetTopLevelLabels()
+	podLabels := make(map[string]string)
 	podLabels["app"] = externalDnsConfig.Provider.ResourceName()
 	podLabels["checksum/configmap"] = configMapHash[:16]
 

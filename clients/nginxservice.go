@@ -1,11 +1,25 @@
 package clients
 
 import (
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+type SvcInfo struct {
+	name   string
+	ipAddr string
+	id     string
+}
+
+func LoadSvc(id arm.ResourceID) *SvcInfo {
+	return &SvcInfo{
+		id:   id.String(),
+		name: id.Name,
+	}
+}
 
 // returns manifest for a basic nginx deployment
 func NewNginxDeployment() *appsv1.Deployment {
@@ -47,11 +61,10 @@ func NewNginxDeployment() *appsv1.Deployment {
 }
 
 // returns nginx service
-func NewNginxService() *corev1.Service {
+func NewNginxService() (*SvcInfo, *corev1.Service) {
 	annotations := make(map[string]string)
-	//annotations["external-dns.alpha.kubernetes.io/hostname"] = "server.example.com"
 
-	return &corev1.Service{
+	svcObj := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
@@ -74,6 +87,11 @@ func NewNginxService() *corev1.Service {
 			},
 		},
 	}
+
+	ip := svcObj.Spec.LoadBalancerIP
+	serviceInfo := &SvcInfo{name: "nginx-svc", ipAddr: ip, id: svcObj.GroupVersionKind().GroupVersion().Identifier()}
+
+	return serviceInfo, svcObj
 }
 
 func WithPreferSystemNodes(spec *corev1.PodSpec) *corev1.PodSpec {
@@ -125,4 +143,16 @@ func WithPreferSystemNodes(spec *corev1.PodSpec) *corev1.PodSpec {
 	})
 
 	return copy
+}
+
+func (s *SvcInfo) GetName() string {
+	return s.name
+}
+
+func (s *SvcInfo) GetIpAddr() string {
+	return s.ipAddr
+}
+
+func (s *SvcInfo) GetId() string {
+	return s.id
 }
