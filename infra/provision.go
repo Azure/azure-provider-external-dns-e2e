@@ -243,7 +243,7 @@ func deployExternalDNS(ctx context.Context, p Provisioned) error {
 	privateDnsConfig := manifests.GetPrivateDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), privateZoneNames)
 
 	//TODO: correct value for cluster uid?
-	exConfig := manifests.SetExampleConfig(p.Cluster.GetId(), publicDnsConfig, privateDnsConfig)
+	exConfig := manifests.SetExampleConfig(p.Cluster.GetClientId(), p.Cluster.GetId(), publicDnsConfig, privateDnsConfig)
 	currentConfig := exConfig[0] //currently only using one config from external_dns_config.go
 
 	objs := manifests.ExternalDnsResources(currentConfig.Conf, currentConfig.Deploy, currentConfig.DnsConfigs)

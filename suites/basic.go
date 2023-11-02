@@ -17,6 +17,11 @@ import (
 
 var serviceObj *corev1.Service
 
+func init() {
+	//retrieve service once to be used for all tests
+
+}
+
 func basicSuite(in infra.Provisioned) []test {
 
 	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
@@ -86,30 +91,31 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, dnsZoneName string, timeout time.Duration, serviceName string) error {
 	fmt.Println()
 	fmt.Println("#0 In validateRecord() function ---------------------")
-	//TODO: timeout loop to wait on external dns
-	//for loop that tests to see if
-	//checks every timeout interval if external dns is done, once it's up and running, it breaks
 
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
 
+	//TODO: Shouldn't have to wait for external dns pod to start running
 	err := tests.WaitForExternalDns(ctx, timeout, subscriptionId, rg, clusterName)
 	if err != nil {
 		return fmt.Errorf("error waiting for ExternalDNS to start running %w", err)
 	}
+
+	//wait a few seconds to give time for record to be created -----------
+	fmt.Println("Sleeping to wait for record creation ------------")
+	time.Sleep(7 * time.Second)
 
 	cred, err := clients.GetAzCred()
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}
 
-	fmt.Println("#1 Creating ClientFactory function ---------------------")
 	clientFactory, err := armdns.NewClientFactory(subscriptionId, cred, nil)
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
 		return fmt.Errorf("failed to create armdns.ClientFactory")
 	}
-	fmt.Println("#2 Creating pager ---------------------")
+
 	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, dnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
 		Recordsetnamesuffix: nil,
 	})
@@ -125,8 +131,8 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 		for _, v := range page.Value {
 			fmt.Println("In Loop!  dns record created ======================= :)")
 			//fmt.Println("Record type: ", *(v.Type))
-			fmt.Println("#4 =========== Ip address: ", *(v.Properties.ARecords[0]))
-			fmt.Println("#5 =========== Zone name: ", *(v.Properties.Fqdn))
+			fmt.Println("#4 =========== Ip address: ", v.Properties.ARecords[0].IPv4Address)
+			fmt.Println("#5 =========== Zone name: ", v.Properties.Fqdn)
 
 			//TODO: grab a dns record whose dns zone name matches the service dns zone name. Then check to see if the ip address matches the
 			//ip address on the load balancer

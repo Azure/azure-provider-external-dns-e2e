@@ -63,12 +63,12 @@ func GetPrivateDnsConfig(tenantId, subId, rg string, privateZones []string) *Ext
 	return privateDnsConfig
 }
 
-func SetExampleConfig(clusterUid string, publicDnsConfig, privateDnsConfig *ExternalDnsConfig) []configStruct {
+func SetExampleConfig(clientId, clusterUid string, publicDnsConfig, privateDnsConfig *ExternalDnsConfig) []configStruct {
 	//for now, we have one configuration, returning an array of configStructs allows us to rotate between configs if necessary
 	exampleConfigs := []configStruct{
 		{
 			Name:       "full",
-			Conf:       &config.Config{NS: "kube-system", ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3, Registry: "mcr.microsoft.com"},
+			Conf:       &config.Config{NS: "kube-system", MSIClientID: clientId, ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3, Registry: "mcr.microsoft.com"},
 			Deploy:     nil,
 			DnsConfigs: []*ExternalDnsConfig{publicDnsConfig, privateDnsConfig},
 		},
