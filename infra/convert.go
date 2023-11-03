@@ -20,11 +20,6 @@ func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 		return LoadableProvisioned{}, fmt.Errorf("parsing resource group resource id: %w", err)
 	}
 
-	service, err := arm.ParseResourceID(p.Service.GetId())
-	if err != nil {
-		return LoadableProvisioned{}, fmt.Errorf("parsing service resource id: %w", err)
-	}
-
 	zones := make([]LoadableZone, len(p.Zones))
 	for i, zone := range p.Zones {
 		z, err := azure.ParseResourceID(zone.GetId())
@@ -59,7 +54,8 @@ func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 		ResourceGroup:       *resourceGroup,
 		SubscriptionId:      p.SubscriptionId,
 		TenantId:            p.TenantId,
-		Service:             *service,
+		ServiceName:         p.ServiceName,
+		ServiceIP:           p.ServiceIP,
 	}, nil
 
 }
@@ -108,6 +104,7 @@ func (l LoadableProvisioned) Provisioned() (Provisioned, error) {
 		ResourceGroup:  clients.LoadRg(l.ResourceGroup),
 		SubscriptionId: l.SubscriptionId,
 		TenantId:       l.TenantId,
-		Service:        clients.LoadSvc(l.Service),
+		ServiceName:    l.ServiceName,
+		ServiceIP:      l.ServiceIP,
 	}, nil
 }

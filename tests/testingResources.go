@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -15,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
@@ -28,9 +28,8 @@ type runCommandOpts struct {
 	outputFile string
 }
 
-// addl param: objs []client.Object
-func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, serviceName string) error {
-	//fmt.Println("In AnnotateService function --------------------")
+// Annotates Service and returns IP address on the load balancer
+func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, serviceName string) (string, error) {
 
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
@@ -43,33 +42,35 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 	if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr(cmd),
 	}, runCommandOpts{}); err != nil {
-		return fmt.Errorf("running kubectl apply: %w", err)
+		return "", fmt.Errorf("running kubectl apply: %w", err)
 	}
 
-	//check annotation
-	cmd = fmt.Sprintf("kubectl get service %s -n kube-system -o jsonpath='{.metadata.annotations}'", serviceName)
-	annotationLog, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+	//check that annotation was saved, get IP address
+	cmd = fmt.Sprintf("kubectl get service %s -n kube-system -o json", serviceName)
+	resultProperties, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr(cmd),
 	}, runCommandOpts{})
 
 	if err != nil {
-		return fmt.Errorf("error getting service %s", serviceName)
+		return "", fmt.Errorf("error getting service %s", serviceName)
+	}
+	responseLog := *resultProperties.Logs
+
+	fmt.Println("annotation log: ", responseLog)
+	svcObj := &corev1.Service{}
+	err = json.Unmarshal([]byte(responseLog), svcObj)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshaling json for service: %s", err)
 	}
 
-	//TODO: check formatting, not just that annotation key, value exist
-	var annotationSaved bool = false
-	if strings.Contains(annotationLog, key) && strings.Contains(annotationLog, value) {
-		annotationSaved = true
-	}
+	//fmt.Println(svcObj.Annotations)
 
-	if annotationSaved {
-		fmt.Println("===============================")
-		fmt.Println("Service Annotation saved")
-		fmt.Println("===============================")
-		return nil
+	if svcObj.Annotations[key] == value {
+		return svcObj.Status.LoadBalancer.Ingress[0].IP, nil
 	} else {
-		return fmt.Errorf("service annotation was not saved")
+		return "", fmt.Errorf("service annotation was not saved")
 	}
+
 }
 
 // TODO: param: add suport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
@@ -77,7 +78,7 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName string) error {
 	//fmt.Println("In WaitForExternalDns() function ----------------")
 
-	responseLog, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+	resultProperties, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr("kubectl get deploy external-dns -n kube-system -o json"),
 	}, runCommandOpts{outputFile: "testLogs.txt"})
 
@@ -86,6 +87,8 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 		return fmt.Errorf("unable to get pod for external-dns deployment")
 	}
 
+	//CHECK HERE
+	responseLog := *resultProperties.Logs
 	deploy := &appsv1.Deployment{}
 	err = json.Unmarshal([]byte(responseLog), deploy)
 	if err != nil {
@@ -123,8 +126,8 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 
 }
 
-func RunCommand(ctx context.Context, subId, rg, clusterName string, request armcontainerservice.RunCommandRequest, opt runCommandOpts) (string, error) {
-	//fmt.Println("IN RUN COMMAND for command for Tests +++++++++++++ command: ", *request.Command)
+func RunCommand(ctx context.Context, subId, rg, clusterName string, request armcontainerservice.RunCommandRequest, opt runCommandOpts) (armcontainerservice.CommandResultProperties, error) {
+	fmt.Println("IN RUN COMMAND for command for Tests +++++++++++++ command: ", *request.Command)
 
 	lgr := logger.FromContext(ctx)
 	ctx = logger.WithContext(ctx, lgr)
@@ -132,28 +135,29 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	lgr.Info("starting to run command")
 	defer lgr.Info("finished running command for testing")
 
+	emptyResp := &armcontainerservice.CommandResultProperties{}
 	//fmt.Println("#1 Before getting az creds")
 	cred, err := getAzCred()
 	if err != nil {
-		return "", fmt.Errorf("getting az credentials: %w", err)
+		return *emptyResp, fmt.Errorf("getting az credentials: %w", err)
 	}
 
 	//fmt.Println("#2 Before creating managed cluster client")
 	client, err := armcontainerservice.NewManagedClustersClient(subId, cred, nil)
 	if err != nil {
-		return "", fmt.Errorf("creating aks client: %w", err)
+		return *emptyResp, fmt.Errorf("creating aks client: %w", err)
 	}
 
 	//fmt.Println("#3 Before BeginRunCommand() call")
 	poller, err := client.BeginRunCommand(ctx, rg, clusterName, request, nil)
 	if err != nil {
-		return "", fmt.Errorf("starting run command: %w", err)
+		return *emptyResp, fmt.Errorf("starting run command: %w", err)
 	}
 
 	//fmt.Println("#4 Before Poller PollUnitlDone() call")
 	result, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
-		return "", fmt.Errorf("running command: %w", err)
+		return *emptyResp, fmt.Errorf("running command: %w", err)
 	}
 
 	//fmt.Println("#5 Before Checking Logs")
@@ -169,12 +173,12 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 		outputFile, err := os.OpenFile(opt.outputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 
-			return logs, fmt.Errorf("creating output file %s: %w", opt.outputFile, err)
+			return *result.Properties, fmt.Errorf("creating output file %s: %w", opt.outputFile, err)
 		}
 		defer outputFile.Close()
 		_, err = outputFile.WriteString(logs)
 		if err != nil {
-			return logs, fmt.Errorf("writing output file %s: %w", opt.outputFile, err)
+			return *result.Properties, fmt.Errorf("writing output file %s: %w", opt.outputFile, err)
 		}
 	} else {
 		lgr.Info("using command logs, no output file specified")
@@ -183,11 +187,11 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	//fmt.Println("#6 Before checking exit code")
 	if *result.Properties.ExitCode != 0 {
 		lgr.Info(fmt.Sprintf("command failed with exit code %d", *result.Properties.ExitCode))
-		return logs, nonZeroExitCode
+		return *result.Properties, nonZeroExitCode
 	}
 
 	//fmt.Println("returning logs with no error >>>>>>>>>>>>>>>>>>>>>")
-	return logs, nil
+	return *result.Properties, nil
 }
 
 func getAzCred() (azcore.TokenCredential, error) {

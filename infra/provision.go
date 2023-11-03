@@ -141,14 +141,23 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	}
 
 	//Create Nginx service -- TODO: remove this, we'll provision the service in the test only
-	svcInfo, serviceObj, err := deployNginx(ctx, ret)
+	_, serviceObj, err := deployNginx(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
 
 	//svcInfo := ServiceInfo{name: serviceObj.ObjectMeta.Name, ipAddr: serviceObj.Spec.LoadBalancerIP}
-	fmt.Println("load balancer: ", serviceObj.Spec.LoadBalancerIP)
-	ret.Service = svcInfo
+
+	ret.ServiceName = serviceObj.Name
+	ret.ServiceIP = serviceObj.Spec.LoadBalancerIP
+	if serviceObj.Spec.LoadBalancerIP == "" {
+		fmt.Println("Load balancer ip DNE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+	}
+	// fmt.Println("load balancer: ", serviceObj.Spec.LoadBalancerIP)
+	// fmt.Println("Service Name: ", svcInfo.GetName())
+	// fmt.Println("Service Ip: ", svcInfo.GetIpAddr())
+	// ret.ServiceName = svcInfo.GetName()
+	// ret.ServiceIP = svcInfo.GetIpAddr()
 
 	return ret, nil
 }

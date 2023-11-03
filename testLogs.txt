@@ -4032,3 +4032,3403 @@ error: a resource cannot be retrieved by name across all namespaces
         "updatedReplicas": 1
     }
 }
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"1fddcbe6d19ea015\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e5c9ae7b8-5e93-4de1-a5e6-8c01de4dd5ac/providers/Microsoft.ContainerService/managedClusters/cluster961e4a57-69ff-46f2-9df6-3b430bf85929\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-02T19:18:11Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1518",
+        "uid": "4e360f47-f7db-4dcf-bfde-982a5a20e0e2"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "1fddcbe6d19ea015"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e5c9ae7b8-5e93-4de1-a5e6-8c01de4dd5ac/providers/Microsoft.ContainerService/managedClusters/cluster961e4a57-69ff-46f2-9df6-3b430bf85929",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-02T19:18:26Z",
+                "lastUpdateTime": "2023-11-02T19:18:26Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-02T19:18:11Z",
+                "lastUpdateTime": "2023-11-02T19:18:26Z",
+                "message": "ReplicaSet \"external-dns-79b6f59f7c\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"1fddcbe6d19ea015\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e5c9ae7b8-5e93-4de1-a5e6-8c01de4dd5ac/providers/Microsoft.ContainerService/managedClusters/cluster961e4a57-69ff-46f2-9df6-3b430bf85929\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-02T19:18:11Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1518",
+        "uid": "4e360f47-f7db-4dcf-bfde-982a5a20e0e2"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "1fddcbe6d19ea015"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e5c9ae7b8-5e93-4de1-a5e6-8c01de4dd5ac/providers/Microsoft.ContainerService/managedClusters/cluster961e4a57-69ff-46f2-9df6-3b430bf85929",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-02T19:18:26Z",
+                "lastUpdateTime": "2023-11-02T19:18:26Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-02T19:18:11Z",
+                "lastUpdateTime": "2023-11-02T19:18:26Z",
+                "message": "ReplicaSet \"external-dns-79b6f59f7c\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"48d182a92773ce5b\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2eae82a572-79c6-4cef-a840-4062e66b4870/providers/Microsoft.ContainerService/managedClusters/clusterff347c7c-1a37-488f-a38d-bf14b5607239\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-02T19:36:17Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1734",
+        "uid": "0cb6cb88-584f-405a-843e-eca820c36c39"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "48d182a92773ce5b"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2eae82a572-79c6-4cef-a840-4062e66b4870/providers/Microsoft.ContainerService/managedClusters/clusterff347c7c-1a37-488f-a38d-bf14b5607239",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-02T19:36:32Z",
+                "lastUpdateTime": "2023-11-02T19:36:32Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-02T19:36:17Z",
+                "lastUpdateTime": "2023-11-02T19:36:32Z",
+                "message": "ReplicaSet \"external-dns-847f567c6b\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"dee2b3c2af80912f\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e956e14af-c980-474a-8b56-a7f5b19410b9/providers/Microsoft.ContainerService/managedClusters/cluster03d3bc29-134a-47ac-86b4-88661253b855\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-02T20:41:05Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1557",
+        "uid": "b04c1ab1-ae89-4cfe-bd43-71a272294ee3"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "dee2b3c2af80912f"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e956e14af-c980-474a-8b56-a7f5b19410b9/providers/Microsoft.ContainerService/managedClusters/cluster03d3bc29-134a-47ac-86b4-88661253b855",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-02T20:41:21Z",
+                "lastUpdateTime": "2023-11-02T20:41:21Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-02T20:41:05Z",
+                "lastUpdateTime": "2023-11-02T20:41:21Z",
+                "message": "ReplicaSet \"external-dns-6469d564cf\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"dee2b3c2af80912f\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e956e14af-c980-474a-8b56-a7f5b19410b9/providers/Microsoft.ContainerService/managedClusters/cluster03d3bc29-134a-47ac-86b4-88661253b855\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-02T20:41:05Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1557",
+        "uid": "b04c1ab1-ae89-4cfe-bd43-71a272294ee3"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "dee2b3c2af80912f"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e956e14af-c980-474a-8b56-a7f5b19410b9/providers/Microsoft.ContainerService/managedClusters/cluster03d3bc29-134a-47ac-86b4-88661253b855",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-02T20:41:21Z",
+                "lastUpdateTime": "2023-11-02T20:41:21Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-02T20:41:05Z",
+                "lastUpdateTime": "2023-11-02T20:41:21Z",
+                "message": "ReplicaSet \"external-dns-6469d564cf\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"c2b7a19f907b42c1\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ec2f29df8-2192-45ad-895f-662450264410/providers/Microsoft.ContainerService/managedClusters/clustere0c523a3-29e4-49e1-a446-ba823197033c\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T14:49:22Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1445",
+        "uid": "c2566611-1b2d-4149-814f-f6cb5dea7076"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "c2b7a19f907b42c1"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ec2f29df8-2192-45ad-895f-662450264410/providers/Microsoft.ContainerService/managedClusters/clustere0c523a3-29e4-49e1-a446-ba823197033c",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T14:49:37Z",
+                "lastUpdateTime": "2023-11-03T14:49:37Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T14:49:22Z",
+                "lastUpdateTime": "2023-11-03T14:49:37Z",
+                "message": "ReplicaSet \"external-dns-799784d877\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"a1e1a2d8e573cf9a\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed7d81b76-f991-4894-8310-d381b02c852a/providers/Microsoft.ContainerService/managedClusters/cluster531fcd77-86c6-478b-931d-fa7e026cec9d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T15:53:24Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1454",
+        "uid": "fa6ed863-0dd6-4726-8964-75a3cd46a360"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "a1e1a2d8e573cf9a"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed7d81b76-f991-4894-8310-d381b02c852a/providers/Microsoft.ContainerService/managedClusters/cluster531fcd77-86c6-478b-931d-fa7e026cec9d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T15:53:39Z",
+                "lastUpdateTime": "2023-11-03T15:53:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T15:53:24Z",
+                "lastUpdateTime": "2023-11-03T15:53:39Z",
+                "message": "ReplicaSet \"external-dns-59d6dbc656\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"a1e1a2d8e573cf9a\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed7d81b76-f991-4894-8310-d381b02c852a/providers/Microsoft.ContainerService/managedClusters/cluster531fcd77-86c6-478b-931d-fa7e026cec9d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T15:53:24Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1454",
+        "uid": "fa6ed863-0dd6-4726-8964-75a3cd46a360"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "a1e1a2d8e573cf9a"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed7d81b76-f991-4894-8310-d381b02c852a/providers/Microsoft.ContainerService/managedClusters/cluster531fcd77-86c6-478b-931d-fa7e026cec9d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T15:53:39Z",
+                "lastUpdateTime": "2023-11-03T15:53:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T15:53:24Z",
+                "lastUpdateTime": "2023-11-03T15:53:39Z",
+                "message": "ReplicaSet \"external-dns-59d6dbc656\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"a1e1a2d8e573cf9a\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed7d81b76-f991-4894-8310-d381b02c852a/providers/Microsoft.ContainerService/managedClusters/cluster531fcd77-86c6-478b-931d-fa7e026cec9d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T15:53:24Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1454",
+        "uid": "fa6ed863-0dd6-4726-8964-75a3cd46a360"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "a1e1a2d8e573cf9a"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed7d81b76-f991-4894-8310-d381b02c852a/providers/Microsoft.ContainerService/managedClusters/cluster531fcd77-86c6-478b-931d-fa7e026cec9d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T15:53:39Z",
+                "lastUpdateTime": "2023-11-03T15:53:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T15:53:24Z",
+                "lastUpdateTime": "2023-11-03T15:53:39Z",
+                "message": "ReplicaSet \"external-dns-59d6dbc656\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"435fa0db4a35ab93\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed435cb84-5904-4fe3-9ef2-c12a6f435ff6/providers/Microsoft.ContainerService/managedClusters/cluster830c4328-4db4-4c16-b0f8-2cb3738be0c4\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T16:49:57Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1452",
+        "uid": "8becee42-476d-4f2b-a21e-55b9d339fdc6"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "435fa0db4a35ab93"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2ed435cb84-5904-4fe3-9ef2-c12a6f435ff6/providers/Microsoft.ContainerService/managedClusters/cluster830c4328-4db4-4c16-b0f8-2cb3738be0c4",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T16:50:12Z",
+                "lastUpdateTime": "2023-11-03T16:50:12Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T16:49:57Z",
+                "lastUpdateTime": "2023-11-03T16:50:12Z",
+                "message": "ReplicaSet \"external-dns-d6bdd9858\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"4a3de771c98f0474\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2eabcb9f7d-06e8-4fef-a64a-825972b775d6/providers/Microsoft.ContainerService/managedClusters/cluster0da848c9-1f35-4764-b32e-4ddb6c99663c\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T17:35:04Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1534",
+        "uid": "e6123e0d-3016-418a-9e97-73370471932f"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "4a3de771c98f0474"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2eabcb9f7d-06e8-4fef-a64a-825972b775d6/providers/Microsoft.ContainerService/managedClusters/cluster0da848c9-1f35-4764-b32e-4ddb6c99663c",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T17:35:20Z",
+                "lastUpdateTime": "2023-11-03T17:35:20Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T17:35:04Z",
+                "lastUpdateTime": "2023-11-03T17:35:20Z",
+                "message": "ReplicaSet \"external-dns-6ddb7cf477\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"b664cf871ef73e90\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e20b4cf66-50ef-4908-b48e-f9a3d53b8516/providers/Microsoft.ContainerService/managedClusters/clusterc3ac0979-54c2-4137-a9f1-75b0866cca26\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T17:53:19Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1451",
+        "uid": "ef00b3eb-05d4-4040-be83-4017954f67cf"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "b664cf871ef73e90"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e20b4cf66-50ef-4908-b48e-f9a3d53b8516/providers/Microsoft.ContainerService/managedClusters/clusterc3ac0979-54c2-4137-a9f1-75b0866cca26",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T17:53:35Z",
+                "lastUpdateTime": "2023-11-03T17:53:35Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T17:53:19Z",
+                "lastUpdateTime": "2023-11-03T17:53:35Z",
+                "message": "ReplicaSet \"external-dns-784fd48768\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"76faa636dddf19f7\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T18:15:23Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1580",
+        "uid": "ba8bfd75-8245-4756-91af-c47923e64340"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "76faa636dddf19f7"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T18:15:39Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T18:15:23Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "ReplicaSet \"external-dns-5b6978b6b6\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"76faa636dddf19f7\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T18:15:23Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1580",
+        "uid": "ba8bfd75-8245-4756-91af-c47923e64340"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "76faa636dddf19f7"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T18:15:39Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T18:15:23Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "ReplicaSet \"external-dns-5b6978b6b6\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"76faa636dddf19f7\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T18:15:23Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1580",
+        "uid": "ba8bfd75-8245-4756-91af-c47923e64340"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "76faa636dddf19f7"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T18:15:39Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T18:15:23Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "ReplicaSet \"external-dns-5b6978b6b6\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"76faa636dddf19f7\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T18:15:23Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1580",
+        "uid": "ba8bfd75-8245-4756-91af-c47923e64340"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "76faa636dddf19f7"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T18:15:39Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T18:15:23Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "ReplicaSet \"external-dns-5b6978b6b6\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/managed-by\":\"aks-app-routing-operator\",\"app.kubernetes.io/name\":\"external-dns\"},\"name\":\"external-dns\",\"namespace\":\"kube-system\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":2,\"selector\":{\"matchLabels\":{\"app\":\"external-dns\"}},\"strategy\":{},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app\":\"external-dns\",\"checksum/configmap\":\"76faa636dddf19f7\"}},\"spec\":{\"affinity\":{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/mode\",\"operator\":\"In\",\"values\":[\"system\"]}]},\"weight\":100}],\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.azure.com/cluster\",\"operator\":\"Exists\"},{\"key\":\"type\",\"operator\":\"NotIn\",\"values\":[\"virtual-kubelet\"]},{\"key\":\"kubernetes.io/os\",\"operator\":\"In\",\"values\":[\"linux\"]}]}]}}},\"containers\":[{\"args\":[\"--provider=azure\",\"--source=ingress\",\"--source=service\",\"--interval=3m0s\",\"--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d\",\"--domain-filter=mscpubliczone.com\"],\"image\":\"mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2\",\"livenessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"name\":\"controller\",\"readinessProbe\":{\"failureThreshold\":3,\"httpGet\":{\"path\":\"/healthz\",\"port\":7979,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":10,\"periodSeconds\":5,\"successThreshold\":1,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"250Mi\"}},\"volumeMounts\":[{\"mountPath\":\"/etc/kubernetes\",\"name\":\"azure-config\",\"readOnly\":true}]}],\"priorityClassName\":\"system-node-critical\",\"serviceAccountName\":\"external-dns\",\"tolerations\":[{\"key\":\"CriticalAddonsOnly\",\"operator\":\"Exists\"}],\"volumes\":[{\"configMap\":{\"name\":\"external-dns\"},\"name\":\"azure-config\"}]}}},\"status\":{}}\n"
+        },
+        "creationTimestamp": "2023-11-03T18:15:23Z",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/managed-by": "aks-app-routing-operator",
+            "app.kubernetes.io/name": "external-dns"
+        },
+        "name": "external-dns",
+        "namespace": "kube-system",
+        "resourceVersion": "1580",
+        "uid": "ba8bfd75-8245-4756-91af-c47923e64340"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 2,
+        "selector": {
+            "matchLabels": {
+                "app": "external-dns"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "25%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "external-dns",
+                    "checksum/configmap": "76faa636dddf19f7"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "preferredDuringSchedulingIgnoredDuringExecution": [
+                            {
+                                "preference": {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/mode",
+                                            "operator": "In",
+                                            "values": [
+                                                "system"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "weight": 100
+                            }
+                        ],
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "kubernetes.azure.com/cluster",
+                                            "operator": "Exists"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "operator": "NotIn",
+                                            "values": [
+                                                "virtual-kubelet"
+                                            ]
+                                        },
+                                        {
+                                            "key": "kubernetes.io/os",
+                                            "operator": "In",
+                                            "values": [
+                                                "linux"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "args": [
+                            "--provider=azure",
+                            "--source=ingress",
+                            "--source=service",
+                            "--interval=3m0s",
+                            "--txt-owner-id=/subscriptions/8ecadfc9-d1a3-4ea4-b844-0d9f87e4d7c8/resourcegroups/sample3-routing-e2e4319f54b-3f62-4704-b34f-8f0fd7c35fb0/providers/Microsoft.ContainerService/managedClusters/clustere72df734-20c0-40e7-b1c1-69031101f01d",
+                            "--domain-filter=mscpubliczone.com"
+                        ],
+                        "image": "mcr.microsoft.com/oss/kubernetes/external-dns:v0.11.0.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "controller",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": 7979,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "250Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/kubernetes",
+                                "name": "azure-config",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "priorityClassName": "system-node-critical",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "external-dns",
+                "serviceAccountName": "external-dns",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "CriticalAddonsOnly",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "external-dns"
+                        },
+                        "name": "azure-config"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2023-11-03T18:15:39Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2023-11-03T18:15:23Z",
+                "lastUpdateTime": "2023-11-03T18:15:39Z",
+                "message": "ReplicaSet \"external-dns-5b6978b6b6\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "updatedReplicas": 1
+    }
+}

@@ -113,7 +113,8 @@ type Provisioned struct {
 	TenantId       string
 	Zones          []zone
 	PrivateZones   []privateZone
-	Service        serviceInfoInterface
+	ServiceName    string
+	ServiceIP      string
 }
 
 type LoadableZone struct {
@@ -133,5 +134,6 @@ type LoadableProvisioned struct {
 	TenantId                                                                  string
 	Zones                                                                     []LoadableZone
 	PrivateZones                                                              []azure.Resource
-	Service                                                                   arm.ResourceID
+	ServiceName                                                               string
+	ServiceIP                                                                 string
 }

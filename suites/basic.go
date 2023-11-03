@@ -4,18 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
-	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 )
-
-var serviceObj *corev1.Service
 
 func init() {
 	//retrieve service once to be used for all tests
@@ -28,7 +26,7 @@ func basicSuite(in infra.Provisioned) []test {
 	return []test{
 
 		{
-			name: "public + A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
 			run: func(ctx context.Context) error {
 
 				if err := ARecordTest(ctx, in); //func(service *corev1.Service) error {
@@ -66,18 +64,17 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	fmt.Println("Infra cluster name: ", *clusterName)
 	fmt.Println("Infra rg: ", infra.ResourceGroup.GetName())
 	fmt.Println("Infra zone name: ", publicZone.GetName())
-	fmt.Println("Infra Service name: ", infra.Service)
-
-	svcInfo := infra.Service
+	fmt.Println("Infra Service name: ", infra.ServiceName)
 
 	//service.beta.kubernetes.io/azure-dns-label-name: dns-zone-name   --- for CNAME?
 
-	err = tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), svcInfo.GetName())
+	serviceIP, err := tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), infra.ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service", err)
+		return fmt.Errorf("error: %s", err)
 	}
 
-	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, infra)
+	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, serviceIP)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
@@ -89,7 +86,7 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 
 // Checks to see whether record is created in Azure DNS
 // time out value param
-func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, dnsZoneName string, timeout time.Duration, infra infra.Provisioned) error {
+func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, timeout time.Duration, svcIp string) error {
 	fmt.Println()
 	fmt.Println("#0 In validateRecord() function ---------------------")
 
@@ -117,12 +114,12 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 		return fmt.Errorf("failed to create armdns.ClientFactory")
 	}
 
-	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, dnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
+	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, serviceDnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
 		Recordsetnamesuffix: nil,
 	})
 
-	svc := infra.Service
-
+	fmt.Println("Service ip: ", svcIp)
+	fmt.Println("Service zone name:", serviceDnsZoneName)
 	for pager.More() {
 		fmt.Println("#3 In pager ----------------")
 		page, err := pager.NextPage(ctx)
@@ -134,22 +131,27 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 
 		for _, v := range page.Value {
 			fmt.Println("In Loop!  dns record created ======================= :)")
-			//fmt.Println("Record type: ", *(v.Type))
 			//TODO: Switch/ case for every type of dns record
-			currZoneName := *(v.Properties.Fqdn)
+			currZoneName := strings.Trim(*(v.Properties.Fqdn), ".") //removing trailing '.'
 			ipAddr := *(v.Properties.ARecords[0].IPv4Address)
 			fmt.Println("#4 =========== Ip address: ", ipAddr)
 			fmt.Println("#5 =========== Zone name: ", currZoneName)
 
-			if currZoneName == dnsZoneName && ipAddr == svc.GetIpAddr() {
+			if currZoneName == serviceDnsZoneName && ipAddr == svcIp {
+				fmt.Println()
+				fmt.Println(" ======================== Record matched!!! ====================")
 
+				return nil
 			}
+
 			//TODO: grab a dns record whose dns zone name matches the service dns zone name. Then check to see if the ip address matches the
 			//ip address on the load balancer
 
 		}
 
 	}
+	//test failed
+	return fmt.Errorf("record not created %s", armdns.RecordTypeA)
 
 	// If the HTTP response code is 200 as defined in example definition, your page structure would look as follows. Please pay attention that all the values in the output are fake values for just demo purposes.
 	// page.RecordSetListResult = armdns.RecordSetListResult{
@@ -172,6 +174,4 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 	// 			},
 	// 	}},
 	// }
-
-	return nil
 }

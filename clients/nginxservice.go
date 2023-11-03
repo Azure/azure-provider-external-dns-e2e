@@ -89,7 +89,7 @@ func NewNginxService() (*SvcInfo, *corev1.Service) {
 	}
 
 	ip := svcObj.Spec.LoadBalancerIP
-	serviceInfo := &SvcInfo{name: "nginx-svc", ipAddr: ip, id: svcObj.GroupVersionKind().GroupVersion().Identifier()}
+	serviceInfo := &SvcInfo{name: "nginx-svc", ipAddr: ip} //add id field to parse service resource
 
 	return serviceInfo, svcObj
 }
