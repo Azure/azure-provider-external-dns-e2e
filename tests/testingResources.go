@@ -15,12 +15,30 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
+)
+
+type IpFamily string
+
+// enum for ip families
+const (
+	Ipv4  IpFamily = "IPv4"
+	Ipv6  IpFamily = "IPv6"
+	Cname IpFamily = "CNAME"
+	Mx    IpFamily = "MX"
+	Txt   IpFamily = "TXT"
 )
 
 var cred azcore.TokenCredential
 var nonZeroExitCode = errors.New("non-zero exit code")
+var basicNs = make(map[string]*corev1.Namespace)
 
 type runCommandOpts struct {
 	// outputFile is the file to write the output of the command to. Useful for saving logs from a job or something similar
@@ -28,8 +46,121 @@ type runCommandOpts struct {
 	outputFile string
 }
 
+// adds ip record type to Service spec.ipFamilies and spec.ipFamilyPolicy.. used mainly for ipv6 dual stack clusters
+// but using it just for single stack testing to test ip families individually
+// zones passed in must be EITHER be a public or private zone based on what the test requires
+func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, recordType IpFamily, ipFamilyPolicy corev1.IPFamilyPolicy, usePublicZone bool) error {
+	//TODO: add logger
+	fmt.Println("in AddIPFamilySpec function -----------------------")
+
+	lgr := logger.FromContext(ctx).With("name", ClusterName, "resourceGroup", ResourceGroup)
+	ctx = logger.WithContext(ctx, lgr)
+	lgr.Info("Starting to update IP spec on Service")
+	defer lgr.Info("Finished updating IP spec")
+
+	addrType := recordType
+	fmt.Println("addrType: ", addrType)
+
+	Service.Spec.IPFamilyPolicy = &ipFamilyPolicy
+
+	ipFamilies := make([]corev1.IPFamily, 1)
+
+	// for i, v := range recordTypes {
+	// 	if (v)
+	// }
+
+	//TODO: replace this with ipFamilyPolicy param later
+
+	protocol := recordType.convertValue()
+	fmt.Println("=================== protocol: ", protocol)
+	ipFamilies[0] = protocol
+	fmt.Println("IP families: ", ipFamilies[0])
+	Service.Spec.IPFamilies = ipFamilies
+
+	fmt.Println("==========================================")
+	fmt.Println()
+	fmt.Println("In memory ip family policy: ", Service.Spec.IPFamilyPolicy)
+	fmt.Println("In memory Service: ", Service.Spec.IPFamilies)
+	fmt.Println("==========================================")
+	fmt.Println()
+
+	//get kubeconfig
+	cred, err := getAzCred()
+	if err != nil {
+		return fmt.Errorf("getting az credentials: %w", err)
+	}
+
+	clientFactory, err := armcontainerservice.NewClientFactory(SubscriptionId, cred, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create client: %v", err)
+	}
+
+	res, err := clientFactory.NewManagedClustersClient().ListClusterAdminCredentials(ctx, ResourceGroup, *ClusterName, nil)
+	if err != nil {
+		return fmt.Errorf("Unable to create managed clusters client")
+	}
+	kubeconfig := res.Kubeconfigs[0]
+
+	//result2, err := clientcmd.NewClientConfigFromBytes(kubeconfig.Value)
+	config, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig.Value)
+
+	//config, err = clientcmd.NewClientConfigFromBytes(*kubeconfig)
+	//config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+
+	if err != nil {
+		return fmt.Errorf("Unable to create rest config from kubeconfig")
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("Unable to clientset from rest config")
+	}
+
+	serviceInterface := clientset.CoreV1().Services("kube-system") //TODO: pass in namespace
+	updatedService, err := serviceInterface.Update(ctx, Service, v1.UpdateOptions{})
+	fmt.Println()
+	fmt.Println("=======================================")
+	fmt.Println("ip families: ", updatedService.Spec.IPFamilies)
+	fmt.Println("ip family policy:", updatedService.Spec.IPFamilyPolicy)
+	fmt.Println("=======================================")
+	fmt.Println()
+
+	//res, err := clientFactory.NewManagedClustersClient().GetAccessProfile(ctx, ResourceGroup, *ClusterName, "clusterUser", nil)
+	if err != nil {
+		return fmt.Errorf("failed to finish the request: %v", err)
+	}
+
+	return nil
+
+}
+
+func (ip IpFamily) convertValue() corev1.IPFamily {
+
+	fmt.Println("In convert value --------------------------------")
+	fmt.Println(ip)
+	switch ip {
+
+	case Ipv4:
+		return corev1.IPv4Protocol
+	case Ipv6:
+		fmt.Println("!!!! Returning ipv6 protocol !!!!!!!")
+		return corev1.IPv6Protocol
+	case Cname:
+		//TODO
+	case Mx:
+		//TODO
+	case Txt:
+		//TODO
+	}
+
+	fmt.Println("returning default ipv4 protocol")
+	//default is an ipv4 address, change this later?
+	return corev1.IPv4Protocol
+
+}
+
 // Annotates Service and returns IP address on the load balancer
-func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, serviceName string) (string, error) {
+// adds annotation specifically under spec
+func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, serviceName string) error {
 
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
@@ -42,33 +173,14 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 	if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr(cmd),
 	}, runCommandOpts{}); err != nil {
-		return "", fmt.Errorf("running kubectl apply: %w", err)
+		return fmt.Errorf("running kubectl apply: %w", err)
 	}
 
 	//check that annotation was saved, get IP address
-	cmd = fmt.Sprintf("kubectl get service %s -n kube-system -o json", serviceName)
-	resultProperties, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-		Command: to.Ptr(cmd),
-	}, runCommandOpts{})
-
-	if err != nil {
-		return "", fmt.Errorf("error getting service %s", serviceName)
-	}
-	responseLog := *resultProperties.Logs
-
-	fmt.Println("annotation log: ", responseLog)
-	svcObj := &corev1.Service{}
-	err = json.Unmarshal([]byte(responseLog), svcObj)
-	if err != nil {
-		return "", fmt.Errorf("error unmarshaling json for service: %s", err)
-	}
-
-	//fmt.Println(svcObj.Annotations)
-
-	if svcObj.Annotations[key] == value {
-		return svcObj.Status.LoadBalancer.Ingress[0].IP, nil
+	if Service.Annotations[key] == value {
+		return nil
 	} else {
-		return "", fmt.Errorf("service annotation was not saved")
+		return fmt.Errorf("service annotation was not saved")
 	}
 
 }
@@ -208,4 +320,30 @@ func getAzCred() (azcore.TokenCredential, error) {
 
 	cred = c
 	return cred, nil
+}
+
+func upsert(ctx context.Context, c client.Client, obj client.Object) error {
+	copy := obj.DeepCopyObject().(client.Object)
+	lgr := logger.FromContext(ctx).With("object", copy.GetName(), "namespace", copy.GetNamespace())
+	lgr.Info("upserting object")
+
+	// create or update the object
+	lgr.Info("attempting to create object")
+	err := c.Create(ctx, copy)
+	if err == nil {
+		obj.SetName(copy.GetName()) // supports objects that want to use generate name
+		lgr.Info("object created")
+		return nil
+	}
+	if !apierrors.IsAlreadyExists(err) {
+		return fmt.Errorf("creating object: %w", err)
+	}
+
+	lgr.Info("object already exists, attempting to update")
+	if err := c.Update(ctx, copy); err != nil {
+		return fmt.Errorf("updating object: %w", err)
+	}
+
+	lgr.Info("object updated")
+	return nil
 }

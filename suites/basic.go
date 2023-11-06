@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
@@ -15,21 +16,29 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 )
 
-func init() {
-	//retrieve service once to be used for all tests
-
-}
-
 func basicSuite(in infra.Provisioned) []test {
 
 	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
 	return []test{
 
+		// {
+		// 	name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+		// 	run: func(ctx context.Context) error {
+
+		// 		if err := ARecordTest(ctx, in); //func(service *corev1.Service) error {
+
+		// 		err != nil {
+		// 			return err
+		// 		}
+
+		// 		return nil
+		// 	},
+		// },
 		{
-			name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
 			run: func(ctx context.Context) error {
 
-				if err := ARecordTest(ctx, in); //func(service *corev1.Service) error {
+				if err := AAAARecordTest(ctx, in, tests.Ipv6, corev1.IPFamilyPolicySingleStack, true); //func(service *corev1.Service) error {
 
 				err != nil {
 					return err
@@ -38,11 +47,57 @@ func basicSuite(in infra.Provisioned) []test {
 				return nil
 			},
 		},
+		// {
+		// 	//public cluster _ public DNS + CNAME
+		// },
+		// {
+		// 	//public cluster + public DNS + MX
+		// },
+		// {
+		// 	//public cluster + public DNS + TXT
+		// },
+		// {
+		// 	//public cluster + private DNS + A
+		// },
+		// {
+		// 	//public cluster + private DNS + AAAA
+		// },
+		// {
+		// 	//public cluster + private DNS + CNAME
+		// },
+		// {
+		// 	//public cluster + private DNS + MX
+		// },
+		// {
+		// 	//public cluster + private DNS + TXT
+		// },
 	}
 }
 
-// modifier is a function that can be used to modify the ingress and service
-//type modifier func(service *corev1.Service) error
+var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, recordType tests.IpFamily, ipFamilyPolicy corev1.IPFamilyPolicy, usePublicZone bool) error {
+
+	fmt.Println("In test 2 -----------------------------")
+	lgr := logger.FromContext(ctx)
+	lgr.Info("starting test")
+
+	//convert record type to ipfamily enum type
+	err := tests.AddIPFamilySpec(ctx, infra, recordType, ipFamilyPolicy, usePublicZone)
+	if err != nil {
+		return fmt.Errorf("Error adding ip family and ip family policy to service spec and upserting: %s", err)
+	}
+
+	publicZone := infra.Zones[0]
+	fmt.Println("About to call Validate Record --------------------------")
+	err = validateRecord(ctx, armdns.RecordTypeAAAA, tests.ResourceGroup, tests.SubscriptionId, *tests.ClusterName, publicZone.GetName(), 4, tests.Service.Status.LoadBalancer.Ingress[0].IP)
+	if err != nil {
+		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeAAAA)
+	} else {
+		lgr.Info("finished successfully")
+	}
+
+	return nil
+
+}
 
 var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	fmt.Printf("%+v\n", infra)
@@ -53,11 +108,7 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 
 	publicZone := infra.Zones[0]
 
-	cluster, err := infra.Cluster.GetCluster(ctx)
-	if err != nil {
-		lgr.Error("Error getting name from cluster")
-	}
-	clusterName := cluster.Name
+	clusterName := tests.ClusterName
 
 	//values:
 	fmt.Println("Infra subId: ", infra.SubscriptionId)
@@ -68,13 +119,13 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 
 	//service.beta.kubernetes.io/azure-dns-label-name: dns-zone-name   --- for CNAME?
 
-	serviceIP, err := tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), infra.ServiceName)
+	err := tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), infra.ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
-	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, serviceIP)
+	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, tests.Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
@@ -153,25 +204,4 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 	//test failed
 	return fmt.Errorf("record not created %s", armdns.RecordTypeA)
 
-	// If the HTTP response code is 200 as defined in example definition, your page structure would look as follows. Please pay attention that all the values in the output are fake values for just demo purposes.
-	// page.RecordSetListResult = armdns.RecordSetListResult{
-	// 	Value: []*armdns.RecordSet{
-	// 		{
-	// 			Name: to.Ptr("record1"),
-	// 			Type: to.Ptr("Microsoft.Network/dnsZones/A"),
-	// 			Etag: to.Ptr("00000000-0000-0000-0000-000000000000"),
-	// 			ID: to.Ptr("/subscriptions/subid/resourceGroups/rg1/providers/Microsoft.Network/dnsZones/zone1/A/record1"),
-	// 			Properties: &armdns.RecordSetProperties{
-	// 				ARecords: []*armdns.ARecord{
-	// 					{
-	// 						IPv4Address: to.Ptr("127.0.0.1"),
-	// 				}},
-	// 				TTL: to.Ptr[int64](3600),
-	// 				Fqdn: to.Ptr("record1.zone1"),
-	// 				Metadata: map[string]*string{
-	// 					"key1": to.Ptr("value1"),
-	// 				},
-	// 			},
-	// 	}},
-	// }
 }

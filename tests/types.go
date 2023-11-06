@@ -44,6 +44,23 @@ const (
 	cleanDeploy
 )
 
+type zone struct {
+	name       string
+	nameserver string
+}
+type zoner interface {
+	GetName() string
+	GetNameserver() string
+}
+
+func (z zone) GetName() string {
+	return z.name
+}
+
+func (z zone) GetNameserver() string {
+	return z.nameserver
+}
+
 func (o operatorDeployStrategy) string() string {
 	switch o {
 	case upgrade:
