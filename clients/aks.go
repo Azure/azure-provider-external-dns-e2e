@@ -395,7 +395,6 @@ func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCom
 	fmt.Println("IN RUN COMMAND ******************************")
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup, "command", *request.Command)
 	ctx = logger.WithContext(ctx, lgr)
-	lgr.Info("Starting to run command **************************")
 	lgr.Info("starting to run command")
 	defer lgr.Info("finished running command")
 
@@ -423,27 +422,14 @@ func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCom
 	if result.Properties != nil && result.Properties.Logs != nil {
 		logs = *result.Properties.Logs
 	}
-
-	fmt.Println(" ******************* Run command opts: ", opt.outputFile)
-	if opt.outputFile == "" {
-		fmt.Println("output file is empty ************** ")
-	}
-
-	lgr.Info("About to enter output file code**********************")
-	fmt.Println("About to enter output file code**********************")
 	if opt.outputFile != "" {
-		lgr.Info("Before Os.open file ********************")
-		fmt.Println("Before Os.open file ********************")
 		outputFile, err := os.OpenFile(opt.outputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
-			lgr.Info("Error creating Output file aks.go**********************")
-			fmt.Println("Error creating Output file aks.go**********************")
+
 			return fmt.Errorf("creating output file %s: %w", opt.outputFile, err)
 		}
 		defer outputFile.Close()
 
-		lgr.Info("About to write logs to file ******************")
-		fmt.Println("About to write logs to file ******************")
 		_, err = outputFile.WriteString(logs)
 		if err != nil {
 			return fmt.Errorf("writing output file %s: %w", opt.outputFile, err)
