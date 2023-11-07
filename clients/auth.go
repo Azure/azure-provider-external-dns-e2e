@@ -31,6 +31,10 @@ var (
 		Name: "AcrPull",
 		Id:   "/subscriptions/%s/providers/Microsoft.Authorization/roleDefinitions/7f951dda-4ed3-4680-a7ca-43fe172d538d",
 	}
+	NetworkContributorRole = Role{
+		Name: "Network Contributor",
+		Id:   "/subscriptions/%s/providers/Microsoft.Authorization/roleDefinitions/b34d265f-36f7-4a0d-a4d4-e158ca92e90f",
+	}
 )
 
 type roleAssignment struct{}

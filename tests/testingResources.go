@@ -176,8 +176,17 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 		return fmt.Errorf("running kubectl apply: %w", err)
 	}
 
+	fmt.Println("added get service object call ----------------------")
+	serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
+	if err != nil {
+		return fmt.Errorf("error getting service object after annotating")
+	}
+
+	fmt.Println()
+	fmt.Println("--------------------------------")
+	fmt.Println("Service.Annotations: ", serviceObj.Annotations)
 	//check that annotation was saved, get IP address
-	if Service.Annotations[key] == value {
+	if serviceObj.Annotations[key] == value {
 		return nil
 	} else {
 		return fmt.Errorf("service annotation was not saved")

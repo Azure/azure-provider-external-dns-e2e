@@ -7,8 +7,10 @@ import (
 )
 
 var (
-	rg       = "sample3-routing-e2e" + uuid.New().String()
-	location = "westus"
+	rg              = "sample3-routing-e2e" + uuid.New().String()
+	location        = "westus"
+	publicZoneName  = "public-zone-" + uuid.NewString()
+	privateZoneName = "private-zone-" + uuid.NewString()
 )
 
 // Infras is a list of infrastructure configurations the e2e tests will run against

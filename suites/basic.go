@@ -21,24 +21,11 @@ func basicSuite(in infra.Provisioned) []test {
 	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
 	return []test{
 
-		// {
-		// 	name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-		// 	run: func(ctx context.Context) error {
-
-		// 		if err := ARecordTest(ctx, in); //func(service *corev1.Service) error {
-
-		// 		err != nil {
-		// 			return err
-		// 		}
-
-		// 		return nil
-		// 	},
-		// },
 		{
-			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
 			run: func(ctx context.Context) error {
 
-				if err := AAAARecordTest(ctx, in, tests.Ipv6, corev1.IPFamilyPolicySingleStack, true); //func(service *corev1.Service) error {
+				if err := ARecordTest(ctx, in, true); //func(service *corev1.Service) error {
 
 				err != nil {
 					return err
@@ -47,6 +34,19 @@ func basicSuite(in infra.Provisioned) []test {
 				return nil
 			},
 		},
+		// {
+		// 	name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+		// 	run: func(ctx context.Context) error {
+
+		// 		if err := AAAARecordTest(ctx, in, tests.Ipv6, corev1.IPFamilyPolicySingleStack, true); //func(service *corev1.Service) error {
+
+		// 		err != nil {
+		// 			return err
+		// 		}
+
+		// 		return nil
+		// 	},
+		// },
 		// {
 		// 	//public cluster _ public DNS + CNAME
 		// },
@@ -71,6 +71,7 @@ func basicSuite(in infra.Provisioned) []test {
 		// {
 		// 	//public cluster + private DNS + TXT
 		// },
+		// --Private Cluster Tests with same combinations as above
 	}
 }
 
@@ -99,15 +100,16 @@ var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, recordTy
 
 }
 
-var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
+var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
 	fmt.Printf("%+v\n", infra)
 
-	fmt.Println("In basic record test --------------")
+	fmt.Println("In A record test --------------")
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
+	//Currently only provisioning one public and one private zone, no test in this suite tests with more than one of each
 	publicZone := infra.Zones[0]
-
+	privateZone := infra.PrivateZones[0]
 	clusterName := tests.ClusterName
 
 	//values:
@@ -125,7 +127,13 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 		return fmt.Errorf("error: %s", err)
 	}
 
-	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, publicZone.GetName(), 4, tests.Service.Status.LoadBalancer.Ingress[0].IP)
+	var zoneName string
+	if usePublicZone {
+		zoneName = publicZone.GetName()
+	} else {
+		zoneName = privateZone.GetName()
+	}
+	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *clusterName, zoneName, 4, tests.Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {

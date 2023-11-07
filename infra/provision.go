@@ -48,8 +48,24 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	// create resources
 	var resEg errgroup.Group
 
+	var subnetId string
+	var vnetId string
+
+	//create vnet
 	resEg.Go(func() error {
-		ret.Cluster, err = clients.NewAks(ctx, subscriptionId, i.ResourceGroup, "cluster"+i.Suffix, i.Location, i.McOpts...)
+		vnetId, subnetId, err = clients.NewVnet(ctx, subscriptionId, i.ResourceGroup, i.Location)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating vnet: %w", err))
+		}
+		return nil
+	})
+
+	if err := resEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
+
+	resEg.Go(func() error {
+		ret.Cluster, err = clients.NewAks(ctx, subscriptionId, i.ResourceGroup, "cluster"+i.Suffix, i.Location, subnetId, i.McOpts...)
 
 		if err != nil {
 			return logger.Error(lgr, fmt.Errorf("creating managed cluster: %w", err))
@@ -62,7 +78,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	for idx := 0; idx < lenZones; idx++ {
 		func(idx int) {
 			resEg.Go(func() error {
-				zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, "mscpubliczone")
+				zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, publicZoneName)
 				if err != nil {
 					return logger.Error(lgr, fmt.Errorf("creating zone: %w", err))
 				}
@@ -74,7 +90,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	for idx := 0; idx < lenPrivateZones; idx++ {
 		func(idx int) {
 			resEg.Go(func() error {
-				privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, "mscprivatezone")
+				privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, privateZoneName)
 				if err != nil {
 					return logger.Error(lgr, fmt.Errorf("creating private zone: %w", err))
 				}
@@ -129,11 +145,33 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(z)
 	}
 
+	//az role assignment create --assignee <control-plane-identity-principal-id> --scope $VNET_ID --role "Network Contributor"
+	permEg.Go(func() error {
+		principalId := ret.Cluster.GetPrincipalId()
+
+		//TODO: role for subnet, vnet, or both?
+		if vnetId == "" || subnetId == "" {
+			return logger.Error(lgr, fmt.Errorf("vnet id is empty before role assignment"))
+		}
+
+		//Adding network contributor role on the vnet
+		role := clients.NetworkContributorRole
+		if _, err := clients.NewRoleAssignment(ctx, subscriptionId, vnetId, principalId, role); err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
+		}
+
+		//Adding network contributor role on the subnet
+		if _, err := clients.NewRoleAssignment(ctx, subscriptionId, subnetId, principalId, role); err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
+		}
+		return nil
+	})
+
 	if err := permEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
 	}
 
-	//put in errgroups?
+	//TODO: put in errgroups?
 	//Deploy external dns
 	err = deployExternalDNS(ctx, ret)
 	if err != nil {
@@ -146,13 +184,8 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
 
-	//svcInfo := ServiceInfo{name: serviceObj.ObjectMeta.Name, ipAddr: serviceObj.Spec.LoadBalancerIP}
-
 	ret.ServiceName = serviceObj.Name
-	ret.ServiceIP = serviceObj.Spec.LoadBalancerIP
-	if serviceObj.Spec.LoadBalancerIP == "" {
-		fmt.Println("Load balancer ip DNE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-	}
+
 	// fmt.Println("load balancer: ", serviceObj.Spec.LoadBalancerIP)
 	// fmt.Println("Service Name: ", svcInfo.GetName())
 	// fmt.Println("Service Ip: ", svcInfo.GetIpAddr())

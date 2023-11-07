@@ -55,7 +55,6 @@ func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 		SubscriptionId:      p.SubscriptionId,
 		TenantId:            p.TenantId,
 		ServiceName:         p.ServiceName,
-		ServiceIP:           p.ServiceIP,
 	}, nil
 
 }
@@ -105,6 +104,5 @@ func (l LoadableProvisioned) Provisioned() (Provisioned, error) {
 		SubscriptionId: l.SubscriptionId,
 		TenantId:       l.TenantId,
 		ServiceName:    l.ServiceName,
-		ServiceIP:      l.ServiceIP,
 	}, nil
 }

@@ -90,7 +90,7 @@ func LoadAks(id azure.Resource, dnsServiceIp, location, principalId, clientId st
 	}
 }
 
-func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location string, mcOpts ...McOpt) (*aks, error) {
+func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location string, subnetId string, mcOpts ...McOpt) (*aks, error) {
 	lgr := logger.FromContext(ctx).With("name", name, "resourceGroup", resourceGroup, "location", location)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to create aks")
@@ -116,10 +116,11 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 			NodeResourceGroup: to.Ptr(truncate("MC_"+name, 80)),
 			AgentPoolProfiles: []*armcontainerservice.ManagedClusterAgentPoolProfile{
 				{
-					Name:   to.Ptr("default"),
-					VMSize: to.Ptr("Standard_DS3_v2"),
-					Count:  to.Ptr(int32(2)),
-					Mode:   to.Ptr(armcontainerservice.AgentPoolModeSystem),
+					Name:         to.Ptr("default"),
+					VMSize:       to.Ptr("Standard_DS3_v2"),
+					Count:        to.Ptr(int32(2)),
+					Mode:         to.Ptr(armcontainerservice.AgentPoolModeSystem),
+					VnetSubnetID: to.Ptr(subnetId), //new
 				},
 			},
 			AddonProfiles: map[string]*armcontainerservice.ManagedClusterAddonProfile{
@@ -130,6 +131,15 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 					},
 				},
 			},
+			NetworkProfile: &armcontainerservice.NetworkProfile{
+				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginKubenet), //new
+
+				//ServiceCidrs: []*string{to.Ptr("fd12:3456:789a:1::/108"), to.Ptr("10.0.0.0/16")},
+				IPFamilies: []*armcontainerservice.IPFamily{to.Ptr(armcontainerservice.IPFamilyIPv6), to.Ptr(armcontainerservice.IPFamilyIPv4)}, //new,
+			},
+			// APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
+			// 	AuthorizedIPRanges: []*string{to.Ptr("IPv6"), to.Ptr("IPv4")}, //new
+			// },
 		},
 	}
 
