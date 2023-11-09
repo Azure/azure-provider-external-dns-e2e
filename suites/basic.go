@@ -21,19 +21,19 @@ func basicSuite(in infra.Provisioned) []test {
 	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
 	return []test{
 
-		{
-			name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-			run: func(ctx context.Context) error {
+		// {
+		// 	name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+		// 	run: func(ctx context.Context) error {
 
-				if err := ARecordTest(ctx, in, true); //func(service *corev1.Service) error {
+		// 		if err := ARecordTest(ctx, in, true); //func(service *corev1.Service) error {
 
-				err != nil {
-					return err
-				}
+		// 		err != nil {
+		// 			return err
+		// 		}
 
-				return nil
-			},
-		},
+		// 		return nil
+		// 	},
+		// },
 		// {
 		// 	name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
 		// 	run: func(ctx context.Context) error {
@@ -56,9 +56,21 @@ func basicSuite(in infra.Provisioned) []test {
 		// {
 		// 	//public cluster + public DNS + TXT
 		// },
-		// {
-		// 	//public cluster + private DNS + A
-		// },
+		{
+			//public cluster + private DNS + A
+			name: "public cluster + private DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			run: func(ctx context.Context) error {
+
+				if err := ARecordTest(ctx, in, false); 
+
+				err != nil {
+					return err
+				}
+
+				return nil
+			},
+			
+		},
 		// {
 		// 	//public cluster + private DNS + AAAA
 		// },
@@ -77,7 +89,7 @@ func basicSuite(in infra.Provisioned) []test {
 
 var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, recordType tests.IpFamily, ipFamilyPolicy corev1.IPFamilyPolicy, usePublicZone bool) error {
 
-	fmt.Println("In test 2 -----------------------------")
+	fmt.Println("In AAAA test -- 2 -----------------------------")
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
