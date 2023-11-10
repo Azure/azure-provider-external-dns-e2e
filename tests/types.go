@@ -2,8 +2,6 @@ package tests
 
 import (
 	"context"
-
-	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 )
 
 type test interface {
@@ -26,13 +24,11 @@ type ordered []testsWithRunInfo
 
 type testsWithRunInfo struct {
 	tests                  []test
-	config                 manifests.OperatorConfig
 	operatorDeployStrategy operatorDeployStrategy
 }
 
 type testWithConfig struct {
 	test
-	config manifests.OperatorConfig
 }
 
 type operatorDeployStrategy int
