@@ -145,11 +145,9 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(z)
 	}
 
-	//az role assignment create --assignee <control-plane-identity-principal-id> --scope $VNET_ID --role "Network Contributor"
 	permEg.Go(func() error {
 		principalId := ret.Cluster.GetPrincipalId()
 
-		//TODO: role for subnet, vnet, or both?
 		if vnetId == "" || subnetId == "" {
 			return logger.Error(lgr, fmt.Errorf("vnet id is empty before role assignment"))
 		}
@@ -171,26 +169,18 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return Provisioned{}, logger.Error(lgr, err)
 	}
 
-	//TODO: put in errgroups?
 	//Deploy external dns
 	err = deployExternalDNS(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
 
-	//Create Nginx service -- TODO: remove this, we'll provision the service in the test only
 	_, serviceObj, err := deployNginx(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
 
 	ret.ServiceName = serviceObj.Name
-
-	// fmt.Println("load balancer: ", serviceObj.Spec.LoadBalancerIP)
-	// fmt.Println("Service Name: ", svcInfo.GetName())
-	// fmt.Println("Service Ip: ", svcInfo.GetIpAddr())
-	// ret.ServiceName = svcInfo.GetName()
-	// ret.ServiceIP = svcInfo.GetIpAddr()
 
 	return ret, nil
 }
@@ -244,7 +234,7 @@ func deployNginx(ctx context.Context, p Provisioned) (*clients.SvcInfo, *corev1.
 	objs = append(objs, nginxService)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
-		fmt.Println("Error Deploying Nginx resources")
+		lgr.Error("Error deploying Nginx resources ")
 		return svcInfo, nginxService, logger.Error(lgr, err)
 	}
 
@@ -279,21 +269,16 @@ func deployExternalDNS(ctx context.Context, p Provisioned) error {
 		return fmt.Errorf("public and/or private zones were not created/provided")
 	}
 
-	fmt.Println("Public zone names: ", publicZoneNames)
-	fmt.Println("Private zone names: ", privateZoneNames)
-
-	//TODO: is this the correct Tenant ID?
 	publicDnsConfig := manifests.GetPublicDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), publicZoneNames)
 	privateDnsConfig := manifests.GetPrivateDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), privateZoneNames)
 
-	//TODO: correct value for cluster uid?
 	exConfig := manifests.SetExampleConfig(p.Cluster.GetClientId(), p.Cluster.GetId(), publicDnsConfig, privateDnsConfig)
 	currentConfig := exConfig[0] //currently only using one config from external_dns_config.go
 
 	objs := manifests.ExternalDnsResources(currentConfig.Conf, currentConfig.Deploy, currentConfig.DnsConfigs)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
-		fmt.Println("Error Deploying External DNS")
+		lgr.Error("Error Deploying External DNS")
 		return logger.Error(lgr, err)
 	}
 

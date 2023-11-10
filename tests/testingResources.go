@@ -50,33 +50,20 @@ type runCommandOpts struct {
 // but using it just for single stack testing to test ip families individually
 // zones passed in must be EITHER be a public or private zone based on what the test requires
 func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, recordType IpFamily, ipFamilyPolicy corev1.IPFamilyPolicy, usePublicZone bool) error {
-	//TODO: add logger
-	fmt.Println("in AddIPFamilySpec function -----------------------")
 
 	lgr := logger.FromContext(ctx).With("name", ClusterName, "resourceGroup", ResourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("Starting to update IP spec on Service")
 	defer lgr.Info("Finished updating IP spec")
 
-	addrType := recordType
-	fmt.Println("addrType: ", addrType)
+	ipFamilies := make([]corev1.IPFamily, 1)
+	protocol := recordType.convertValue()
+	ipFamilies[0] = protocol
 
 	Service.Spec.IPFamilyPolicy = &ipFamilyPolicy
-
-	ipFamilies := make([]corev1.IPFamily, 1)
-
-	// for i, v := range recordTypes {
-	// 	if (v)
-	// }
-
-	//TODO: replace this with ipFamilyPolicy param later
-
-	protocol := recordType.convertValue()
-	fmt.Println("=================== protocol: ", protocol)
-	ipFamilies[0] = protocol
-	fmt.Println("IP families: ", ipFamilies[0])
 	Service.Spec.IPFamilies = ipFamilies
 
+	//Debug statements ---
 	fmt.Println("==========================================")
 	fmt.Println()
 	fmt.Println("In memory ip family policy: ", Service.Spec.IPFamilyPolicy)
@@ -101,11 +88,7 @@ func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, recordType Ip
 	}
 	kubeconfig := res.Kubeconfigs[0]
 
-	//result2, err := clientcmd.NewClientConfigFromBytes(kubeconfig.Value)
 	config, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig.Value)
-
-	//config, err = clientcmd.NewClientConfigFromBytes(*kubeconfig)
-	//config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 
 	if err != nil {
 		return fmt.Errorf("Unable to create rest config from kubeconfig")
@@ -135,14 +118,11 @@ func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, recordType Ip
 
 func (ip IpFamily) convertValue() corev1.IPFamily {
 
-	fmt.Println("In convert value --------------------------------")
-	fmt.Println(ip)
 	switch ip {
 
 	case Ipv4:
 		return corev1.IPv4Protocol
 	case Ipv6:
-		fmt.Println("!!!! Returning ipv6 protocol !!!!!!!")
 		return corev1.IPv6Protocol
 	case Cname:
 		//TODO
@@ -169,22 +149,18 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 
 	//TODO: namespace parameter
 	cmd := fmt.Sprintf("kubectl annotate service --overwrite %s %s=%s -n kube-system", serviceName, key, value)
-	fmt.Println("About to Run Command: ", cmd)
+
 	if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr(cmd),
 	}, runCommandOpts{}); err != nil {
 		return fmt.Errorf("running kubectl apply: %w", err)
 	}
 
-	fmt.Println("added get service object call ----------------------")
 	serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
 	if err != nil {
 		return fmt.Errorf("error getting service object after annotating")
 	}
 
-	fmt.Println()
-	fmt.Println("--------------------------------")
-	fmt.Println("Service.Annotations: ", serviceObj.Annotations)
 	//check that annotation was saved, get IP address
 	if serviceObj.Annotations[key] == value {
 		return nil
@@ -195,16 +171,18 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 }
 
 // TODO: param: add suport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
-// TODO: Create logger for all fmt.Printlns in this fn
 func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName string) error {
-	//fmt.Println("In WaitForExternalDns() function ----------------")
+
+	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
+	ctx = logger.WithContext(ctx, lgr)
+	lgr.Info("Checking/ Waiting for external dns pod to run")
+	defer lgr.Info("Done waiting for external dns pod")
 
 	resultProperties, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr("kubectl get deploy external-dns -n kube-system -o json"),
 	}, runCommandOpts{outputFile: "testLogs.txt"})
 
 	if err != nil {
-		fmt.Println("Error is not nil, not able to execute command for deployment")
 		return fmt.Errorf("unable to get pod for external-dns deployment")
 	}
 
@@ -213,13 +191,9 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 	deploy := &appsv1.Deployment{}
 	err = json.Unmarshal([]byte(responseLog), deploy)
 	if err != nil {
-		fmt.Println("error unmarshaling ===========")
+
 		return fmt.Errorf("error with unmarshaling json")
 	}
-
-	fmt.Println()
-	fmt.Println("=======================================")
-	fmt.Println("About to check available replicas")
 
 	var extDNSReady bool = true
 	if deploy.Status.AvailableReplicas < 1 {
@@ -230,16 +204,13 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 			i++
 
 			if i >= 5 {
-				fmt.Println("Done waiting for External DNS, pod is NOT running")
 				extDNSReady = false
 			}
 		}
 	}
 
 	if extDNSReady {
-		fmt.Println("ExternalDNS Deployment is ready")
-		fmt.Println("=======================================")
-		fmt.Println()
+		lgr.Info("External Dns deployment is running and ready")
 		return nil
 	} else {
 		return fmt.Errorf("external dns deployment is not running in pod, check logs")

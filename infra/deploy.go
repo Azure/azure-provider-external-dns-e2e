@@ -8,6 +8,9 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
+//Still might need this file in the future, which is why it's not deleted
+// Currently, Deploy() deploys the e2e image, which is not needed.
+
 func (p Provisioned) Deploy(ctx context.Context) error {
 	lgr := logger.FromContext(ctx).With("infra", p.Name)
 	lgr.Info("deploying tests")

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO: change rg prefix once tests are done - not urgent
 var (
 	rg              = "sample3-routing-e2e" + uuid.New().String()
 	location        = "westus"

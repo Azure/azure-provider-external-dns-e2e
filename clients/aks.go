@@ -21,10 +21,7 @@ import (
 )
 
 var (
-	// https://kubernetes.io/docs/concepts/workloads/
-	// more specifically, these are compatible with kubectl rollout status
-	workloadKinds = []string{"Deployment", "StatefulSet", "DaemonSet"}
-
+	workloadKinds   = []string{"Deployment", "StatefulSet", "DaemonSet"}
 	nonZeroExitCode = errors.New("non-zero exit code")
 )
 
@@ -61,6 +58,7 @@ var PrivateClusterOpt = McOpt{
 	},
 }
 
+// TODO: delete this if we're not testing OSM enabled clusters?
 var OsmClusterOpt = McOpt{
 	Name: "osm cluster",
 	fn: func(mc *armcontainerservice.ManagedCluster) error {
@@ -133,7 +131,6 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 			},
 			NetworkProfile: &armcontainerservice.NetworkProfile{
 				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginKubenet), //new
-
 				//ServiceCidrs: []*string{to.Ptr("fd12:3456:789a:1::/108"), to.Ptr("10.0.0.0/16")},
 				IPFamilies: []*armcontainerservice.IPFamily{to.Ptr(armcontainerservice.IPFamilyIPv6), to.Ptr(armcontainerservice.IPFamilyIPv4)}, //new,
 			},
@@ -207,7 +204,7 @@ func (a *aks) Deploy(ctx context.Context, objs []client.Object) error {
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to deploy resources")
-	lgr.Info("In AKS.GO Deploy ------------------------------------")
+
 	defer lgr.Info("finished deploying resources")
 
 	zip, err := zipManifests(objs)
@@ -345,14 +342,14 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 						if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
 							Command: to.Ptr(fmt.Sprintf("kubectl wait --for=condition=complete --timeout=5s job/%s -n %s", obj.GetName(), ns)),
 						}, runCommandOpts{}); err == nil {
-							fmt.Println("job is complete, about to break -- NOT calling getLogsFn() *************************")
+
 							break // job is complete
 						} else {
 							//coming here
 							if !errors.Is(err, nonZeroExitCode) { // if the job is not complete, we will get a non-zero exit code
-								fmt.Println("Calling getLogs function ***********") //not coming here
+
 								getLogsFn()
-								fmt.Println("After calling getLogs function ***********")
+
 								return fmt.Errorf("waiting for job/%s to complete: %w", obj.GetName(), err)
 							}
 						}
@@ -363,7 +360,7 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 						}, runCommandOpts{}); err == nil {
 
 							getLogsFn()
-							fmt.Println("after Calling getLogsFunction() second time ******************")
+
 							return fmt.Errorf("job/%s failed", obj.GetName())
 						}
 					}
@@ -392,7 +389,7 @@ type runCommandOpts struct {
 }
 
 func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCommandRequest, opt runCommandOpts) error {
-	fmt.Println("IN RUN COMMAND ******************************")
+
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup, "command", *request.Command)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to run command")

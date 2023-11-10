@@ -34,19 +34,19 @@ func basicSuite(in infra.Provisioned) []test {
 		// 		return nil
 		// 	},
 		// },
-		// {
-		// 	name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-		// 	run: func(ctx context.Context) error {
+		{
+			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			run: func(ctx context.Context) error {
 
-		// 		if err := AAAARecordTest(ctx, in, tests.Ipv6, corev1.IPFamilyPolicySingleStack, true); //func(service *corev1.Service) error {
+				if err := AAAARecordTest(ctx, in, tests.Ipv6, corev1.IPFamilyPolicyRequireDualStack, true); //func(service *corev1.Service) error {
 
-		// 		err != nil {
-		// 			return err
-		// 		}
+				err != nil {
+					return err
+				}
 
-		// 		return nil
-		// 	},
-		// },
+				return nil
+			},
+		},
 		// {
 		// 	//public cluster _ public DNS + CNAME
 		// },
@@ -61,15 +61,12 @@ func basicSuite(in infra.Provisioned) []test {
 			name: "public cluster + private DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
 			run: func(ctx context.Context) error {
 
-				if err := ARecordTest(ctx, in, false); 
-
-				err != nil {
+				if err := ARecordTest(ctx, in, false); err != nil {
 					return err
 				}
 
 				return nil
 			},
-			
 		},
 		// {
 		// 	//public cluster + private DNS + AAAA
@@ -124,14 +121,12 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 	privateZone := infra.PrivateZones[0]
 	clusterName := tests.ClusterName
 
-	//values:
+	//printing values for debug
 	fmt.Println("Infra subId: ", infra.SubscriptionId)
 	fmt.Println("Infra cluster name: ", *clusterName)
 	fmt.Println("Infra rg: ", infra.ResourceGroup.GetName())
 	fmt.Println("Infra zone name: ", publicZone.GetName())
 	fmt.Println("Infra Service name: ", infra.ServiceName)
-
-	//service.beta.kubernetes.io/azure-dns-label-name: dns-zone-name   --- for CNAME?
 
 	err := tests.AnnotateService(ctx, infra.SubscriptionId, *clusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), infra.ServiceName)
 	if err != nil {
@@ -156,7 +151,6 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 }
 
 // Checks to see whether record is created in Azure DNS
-// time out value param
 func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, timeout time.Duration, svcIp string) error {
 	fmt.Println()
 	fmt.Println("#0 In validateRecord() function ---------------------")
@@ -164,13 +158,12 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
 
-	//TODO: Shouldn't have to wait for external dns pod to start running
 	err := tests.WaitForExternalDns(ctx, timeout, subscriptionId, rg, clusterName)
 	if err != nil {
 		return fmt.Errorf("error waiting for ExternalDNS to start running %w", err)
 	}
 
-	//wait a few seconds to give time for record to be created -----------
+	//TODO: change implementation, wait for record creation with poller
 	fmt.Println("Sleeping to wait for record creation ------------")
 	time.Sleep(7 * time.Second)
 
@@ -185,6 +178,7 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 		return fmt.Errorf("failed to create armdns.ClientFactory")
 	}
 
+	//Private record sets client?
 	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, serviceDnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
 		Recordsetnamesuffix: nil,
 	})
@@ -202,9 +196,11 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 
 		for _, v := range page.Value {
 			fmt.Println("In Loop!  dns record created ======================= :)")
+
 			//TODO: Switch/ case for every type of dns record
+
 			currZoneName := strings.Trim(*(v.Properties.Fqdn), ".") //removing trailing '.'
-			ipAddr := *(v.Properties.ARecords[0].IPv4Address)
+			ipAddr := *(v.Properties.ARecords[0].IPv4Address)       // TODO: change for ipv6 addr
 			fmt.Println("#4 =========== Ip address: ", ipAddr)
 			fmt.Println("#5 =========== Zone name: ", currZoneName)
 
@@ -214,9 +210,6 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 
 				return nil
 			}
-
-			//TODO: grab a dns record whose dns zone name matches the service dns zone name. Then check to see if the ip address matches the
-			//ip address on the load balancer
 
 		}
 

@@ -110,9 +110,9 @@ func (a *acr) BuildAndPush(ctx context.Context, imageName, dockerfilePath string
 		cmd.Stdout = newLogWriter(lgr, "building and pushing acr image: ", nil)
 		var errLog bytes.Buffer
 		cmd.Stderr = io.MultiWriter(&errLog, newLogWriter(lgr, "building and pushing acr image: ", to.Ptr(slog.LevelError)))
-		fmt.Println("Before cmd.Run()")
+
 		err := cmd.Run()
-		fmt.Println("After cmd.Run()")
+
 		if err == nil {
 			break
 		} else {

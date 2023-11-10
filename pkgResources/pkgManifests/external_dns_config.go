@@ -63,6 +63,7 @@ func GetPrivateDnsConfig(tenantId, subId, rg string, privateZones []string) *Ext
 	return privateDnsConfig
 }
 
+// Initializes Example configuration with public and private dns config. Called from Provision.go
 func SetExampleConfig(clientId, clusterUid string, publicDnsConfig, privateDnsConfig *ExternalDnsConfig) []configStruct {
 	//for now, we have one configuration, returning an array of configStructs allows us to rotate between configs if necessary
 	exampleConfigs := []configStruct{

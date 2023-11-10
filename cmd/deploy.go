@@ -16,6 +16,8 @@ func init() {
 	rootCmd.AddCommand(deployCmd)
 }
 
+//May need this command in the future, which is why this file isn't deleted
+
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploys e2e tests on provisioned infrastructure",
@@ -47,8 +49,6 @@ var deployCmd = &cobra.Command{
 		// if err := infra.Deploy(provisioned); err != nil {
 		// 	return fmt.Errorf("test failed: %w", err)
 		// }
-
-		fmt.Println("================================ End of Deploy Command ==================================")
 
 		return nil
 	},
