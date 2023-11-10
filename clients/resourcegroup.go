@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 type rg struct {

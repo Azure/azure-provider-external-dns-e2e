@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/tests"
-
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
+	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 )
 
 // All returns all test in all suites

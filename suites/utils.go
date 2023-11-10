@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	appsv1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 func waitForAvailable(ctx context.Context, c client.Client, deployment appsv1.Deployment) error {

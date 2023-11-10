@@ -12,7 +12,6 @@ import (
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-
 	manifests "github.com/Azure/azure-provider-external-dns-e2e/pkgResources/pkgManifests"
 )
 

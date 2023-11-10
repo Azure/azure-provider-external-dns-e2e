@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
 	appsv1 "k8s.io/api/apps/v1"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
 )
 
 type configStruct struct {
@@ -19,8 +20,6 @@ type configStruct struct {
 func GetPublicDnsConfig(tenantId, subId, rg string, publicZones []string) *ExternalDnsConfig {
 
 	publicDnsConfig := &ExternalDnsConfig{}
-
-	fmt.Println("Setting configuration for ext dns")
 	var publicZonePaths []string
 	i := 0
 
@@ -45,7 +44,6 @@ func GetPrivateDnsConfig(tenantId, subId, rg string, privateZones []string) *Ext
 
 	privateDnsConfig := &ExternalDnsConfig{}
 
-	fmt.Println("Setting configuration for ext dns")
 	var privateZonePaths []string
 	i := 0
 	for i < len(privateZones) {

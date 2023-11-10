@@ -14,7 +14,6 @@ const (
 )
 
 func E2e(image, loadableProvisionedJson string) []client.Object {
-
 	ret := []client.Object{
 		&corev1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{

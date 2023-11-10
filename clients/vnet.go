@@ -29,7 +29,6 @@ var (
 )
 
 func NewVnet(ctx context.Context, subId, rg, region string) (string, string, error) {
-
 	subscriptionID = subId
 	resourceGroupName = rg
 	location = region
@@ -62,7 +61,6 @@ func NewVnet(ctx context.Context, subId, rg, region string) (string, string, err
 }
 
 func createVirtualNetwork(ctx context.Context) (*armnetwork.VirtualNetwork, error) {
-
 	pollerResp, err := virtualNetworksClient.BeginCreateOrUpdate(
 		ctx,
 		resourceGroupName,
@@ -92,7 +90,6 @@ func createVirtualNetwork(ctx context.Context) (*armnetwork.VirtualNetwork, erro
 }
 
 func createSubnet(ctx context.Context) (*armnetwork.Subnet, error) {
-
 	pollerResp, err := subnetsClient.BeginCreateOrUpdate(
 		ctx,
 		resourceGroupName,

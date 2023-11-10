@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
-
 	"github.com/spf13/cobra"
 )
 
@@ -16,13 +15,11 @@ func init() {
 	rootCmd.AddCommand(deployCmd)
 }
 
-//May need this command in the future, which is why this file isn't deleted
-
+// May need this command in the future, which is why this file isn't deleted
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploys e2e tests on provisioned infrastructure",
 	RunE: func(cmd *cobra.Command, args []string) error {
-
 		file, err := os.Open(infraFile)
 		if err != nil {
 			return fmt.Errorf("opening file: %w", err)

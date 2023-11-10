@@ -7,12 +7,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-	"github.com/Azure/azure-provider-external-dns-e2e/suites"
+	"github.com/spf13/cobra"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
-
-	"github.com/spf13/cobra"
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
+	"github.com/Azure/azure-provider-external-dns-e2e/suites"
 )
 
 func init() {

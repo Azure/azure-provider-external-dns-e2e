@@ -3,8 +3,6 @@ package infra
 import (
 	"context"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/clients"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
@@ -12,6 +10,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 )
 
 type infras []infra

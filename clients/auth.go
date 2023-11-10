@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/google/uuid"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 // https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles

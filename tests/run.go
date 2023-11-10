@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
-	corev1 "k8s.io/api/core/v1"
-
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/infra"
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 // global exported vars used by tests
@@ -112,7 +112,6 @@ func getServiceObj(ctx context.Context, subId, rg, clusterName, serviceName stri
 	}
 	responseLog := *resultProperties.Logs
 
-	fmt.Println("annotation log: ", responseLog)
 	svcObj := &corev1.Service{}
 	err = json.Unmarshal([]byte(responseLog), svcObj)
 	if err != nil {

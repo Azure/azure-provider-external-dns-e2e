@@ -9,11 +9,12 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerregistry/armcontainerregistry"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"golang.org/x/exp/slog"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 var (
@@ -96,10 +97,8 @@ func (a *acr) GetId() string {
 }
 
 func (a *acr) BuildAndPush(ctx context.Context, imageName, dockerfilePath string) error {
-
 	lgr := logger.FromContext(ctx).With("image", imageName, "name", a.name, "resourceGroup", a.resourceGroup, "subscriptionId", a.subscriptionId)
 	ctx = logger.WithContext(ctx, lgr)
-
 	lgr.Info("starting to build and push")
 	defer lgr.Info("finished building and pushing")
 
@@ -110,13 +109,11 @@ func (a *acr) BuildAndPush(ctx context.Context, imageName, dockerfilePath string
 		cmd.Stdout = newLogWriter(lgr, "building and pushing acr image: ", nil)
 		var errLog bytes.Buffer
 		cmd.Stderr = io.MultiWriter(&errLog, newLogWriter(lgr, "building and pushing acr image: ", to.Ptr(slog.LevelError)))
-
 		err := cmd.Run()
-
 		if err == nil {
 			break
 		} else {
-			fmt.Println("ERROR: ", err)
+
 			// if this regex matches the az cli can't find the acr, things just need more time to propagate.
 			// We've tried alternate strategies like polling the sdk to see if the acr exists but that
 			// tells us it exists then the acr command fails. This is the only reliable way we've found
