@@ -151,21 +151,17 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 }
 
 // Checks to see whether record is created in Azure DNS
-func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, timeout time.Duration, svcIp string) error {
+func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
 	fmt.Println()
 	fmt.Println("#0 In validateRecord() function ---------------------")
 
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
 
-	err := tests.WaitForExternalDns(ctx, timeout, subscriptionId, rg, clusterName)
+	err := tests.WaitForExternalDns(ctx, numSeconds, subscriptionId, rg, clusterName)
 	if err != nil {
 		return fmt.Errorf("error waiting for ExternalDNS to start running %w", err)
 	}
-
-	//TODO: change implementation, wait for record creation with poller
-	fmt.Println("Sleeping to wait for record creation ------------")
-	time.Sleep(7 * time.Second)
 
 	cred, err := clients.GetAzCred()
 	if err != nil {
@@ -182,6 +178,16 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, serviceDnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
 		Recordsetnamesuffix: nil,
 	})
+
+	timeout := time.Now().Add(7 * time.Second)
+	for {
+		if time.Now().After(timeout) {
+			return fmt.Errorf("Record not created within %s seconds", numSeconds)
+		}
+		if pager.More() {
+			break
+		}
+	}
 
 	fmt.Println("Service ip: ", svcIp)
 	fmt.Println("Service zone name:", serviceDnsZoneName)

@@ -11,16 +11,14 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
@@ -72,7 +70,7 @@ func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, recordType Ip
 	fmt.Println()
 
 	//get kubeconfig
-	cred, err := getAzCred()
+	cred, err := clients.GetAzCred()
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -180,7 +178,7 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 
 	resultProperties, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
 		Command: to.Ptr("kubectl get deploy external-dns -n kube-system -o json"),
-	}, runCommandOpts{outputFile: "testLogs.txt"})
+	}, runCommandOpts{})
 
 	if err != nil {
 		return fmt.Errorf("unable to get pod for external-dns deployment")
@@ -229,7 +227,7 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 
 	emptyResp := &armcontainerservice.CommandResultProperties{}
 	//fmt.Println("#1 Before getting az creds")
-	cred, err := getAzCred()
+	cred, err := clients.GetAzCred()
 	if err != nil {
 		return *emptyResp, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -284,46 +282,4 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 
 	//fmt.Println("returning logs with no error >>>>>>>>>>>>>>>>>>>>>")
 	return *result.Properties, nil
-}
-
-func getAzCred() (azcore.TokenCredential, error) {
-	if cred != nil {
-		return cred, nil
-	}
-
-	// this is CLI instead of DefaultCredential to ensure we are using the same credential as the CLI
-	// and authed through the cli. We use the az cli directly when pushing an image to ACR for now.
-	c, err := azidentity.NewAzureCLICredential(nil)
-	if err != nil {
-		return nil, fmt.Errorf("getting az cli credential: %w", err)
-	}
-
-	cred = c
-	return cred, nil
-}
-
-func upsert(ctx context.Context, c client.Client, obj client.Object) error {
-	copy := obj.DeepCopyObject().(client.Object)
-	lgr := logger.FromContext(ctx).With("object", copy.GetName(), "namespace", copy.GetNamespace())
-	lgr.Info("upserting object")
-
-	// create or update the object
-	lgr.Info("attempting to create object")
-	err := c.Create(ctx, copy)
-	if err == nil {
-		obj.SetName(copy.GetName()) // supports objects that want to use generate name
-		lgr.Info("object created")
-		return nil
-	}
-	if !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("creating object: %w", err)
-	}
-
-	lgr.Info("object already exists, attempting to update")
-	if err := c.Update(ctx, copy); err != nil {
-		return fmt.Errorf("updating object: %w", err)
-	}
-
-	lgr.Info("object updated")
-	return nil
 }

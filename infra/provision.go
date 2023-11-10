@@ -174,7 +174,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
 
-	_, serviceObj, err := deployNginx(ctx, ret)
+	serviceObj, err := deployNginx(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
@@ -219,7 +219,7 @@ func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, erro
 }
 
 // Creates Nginx deployment and service for testing
-func deployNginx(ctx context.Context, p Provisioned) (*clients.SvcInfo, *corev1.Service, error) {
+func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, error) {
 
 	var objs []client.Object
 
@@ -228,16 +228,16 @@ func deployNginx(ctx context.Context, p Provisioned) (*clients.SvcInfo, *corev1.
 	defer lgr.Info("finished deploying nginx resources")
 
 	nginxDeployment := clients.NewNginxDeployment()
-	svcInfo, nginxService := clients.NewNginxService()
+	nginxService := clients.NewNginxService()
 	objs = append(objs, nginxDeployment)
 	objs = append(objs, nginxService)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
 		lgr.Error("Error deploying Nginx resources ")
-		return svcInfo, nginxService, logger.Error(lgr, err)
+		return nginxService, logger.Error(lgr, err)
 	}
 
-	return svcInfo, nginxService, nil
+	return nginxService, nil
 
 }
 
