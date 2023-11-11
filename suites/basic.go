@@ -179,7 +179,7 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 		Recordsetnamesuffix: nil,
 	})
 
-	timeout := time.Now().Add(7 * time.Second)
+	timeout := time.Now().Add(numSeconds * time.Second)
 	for {
 		if time.Now().After(timeout) {
 			return fmt.Errorf("Record not created within %s seconds", numSeconds)
