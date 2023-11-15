@@ -46,20 +46,21 @@ type runCommandOpts struct {
 
 // adds ip record type to Service spec.ipFamilies and spec.ipFamilyPolicy.. used mainly for ipv6 dual stack clusters
 // but using it just for single stack testing to test ip families individually
-// zones passed in must be EITHER be a public or private zone based on what the test requires
-func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, recordType IpFamily, ipFamilyPolicy corev1.IPFamilyPolicy, usePublicZone bool) error {
+// zones passed in must be EITHER a public or private zone based on what the test requires
+func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, ipFamilyPolicy corev1.IPFamilyPolicy, usePublicZone bool) error {
 
 	lgr := logger.FromContext(ctx).With("name", ClusterName, "resourceGroup", ResourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("Starting to update IP spec on Service")
 	defer lgr.Info("Finished updating IP spec")
 
-	ipFamilies := make([]corev1.IPFamily, 1)
-	protocol := recordType.convertValue()
-	ipFamilies[0] = protocol
+	var ipFamilyList []corev1.IPFamily
+	if ipFamilyPolicy == corev1.IPFamilyPolicyRequireDualStack {
+		ipFamilyList = []corev1.IPFamily{corev1.IPv4Protocol, corev1.IPv6Protocol} //TODO: simpler initialization?
+	}
 
 	Service.Spec.IPFamilyPolicy = &ipFamilyPolicy
-	Service.Spec.IPFamilies = ipFamilies
+	Service.Spec.IPFamilies = ipFamilyList
 
 	//Debug statements ---
 	fmt.Println("==========================================")
@@ -98,17 +99,19 @@ func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, recordType Ip
 
 	serviceInterface := clientset.CoreV1().Services("kube-system") //TODO: pass in namespace
 	updatedService, err := serviceInterface.Update(ctx, Service, v1.UpdateOptions{})
-	fmt.Println()
-	fmt.Println("=======================================")
-	fmt.Println("ip families: ", updatedService.Spec.IPFamilies)
-	fmt.Println("ip family policy:", updatedService.Spec.IPFamilyPolicy)
-	fmt.Println("=======================================")
-	fmt.Println()
 
+	fmt.Println("***************************************")
 	//res, err := clientFactory.NewManagedClustersClient().GetAccessProfile(ctx, ResourceGroup, *ClusterName, "clusterUser", nil)
 	if err != nil {
 		return fmt.Errorf("failed to finish the request: %v", err)
 	}
+
+	fmt.Println()
+	fmt.Println("=======================================")
+	fmt.Println("UPDATED ip families: ", updatedService.Spec.IPFamilies)
+	fmt.Println("UPDATED ip family policy:", updatedService.Spec.IPFamilyPolicy)
+	fmt.Println("=======================================")
+	fmt.Println()
 
 	return nil
 

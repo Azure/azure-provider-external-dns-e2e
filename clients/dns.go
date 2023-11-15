@@ -70,6 +70,7 @@ func NewZone(ctx context.Context, subscriptionId, resourceGroup, name string, zo
 			return nil, fmt.Errorf("applying zone option: %w", err)
 		}
 	}
+
 	resp, err := factory.NewZonesClient().CreateOrUpdate(ctx, resourceGroup, name, *z, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating zone: %w", err)

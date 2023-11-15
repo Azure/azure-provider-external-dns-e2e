@@ -132,7 +132,7 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 			NetworkProfile: &armcontainerservice.NetworkProfile{
 				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginKubenet), //new
 				//ServiceCidrs: []*string{to.Ptr("fd12:3456:789a:1::/108"), to.Ptr("10.0.0.0/16")},
-				IPFamilies: []*armcontainerservice.IPFamily{to.Ptr(armcontainerservice.IPFamilyIPv6), to.Ptr(armcontainerservice.IPFamilyIPv4)}, //new,
+				IPFamilies: []*armcontainerservice.IPFamily{to.Ptr(armcontainerservice.IPFamilyIPv4), to.Ptr(armcontainerservice.IPFamilyIPv6)}, //new,
 			},
 			// APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
 			// 	AuthorizedIPRanges: []*string{to.Ptr("IPv6"), to.Ptr("IPv4")}, //new

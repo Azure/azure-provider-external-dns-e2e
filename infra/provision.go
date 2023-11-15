@@ -174,12 +174,13 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
 
-	serviceObj, err := deployNginx(ctx, ret)
+	ipv4Service, ipv6Service, err := deployNginx(ctx, ret) //TODO: confirm that we don't need ipv6 here
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
 
-	ret.ServiceName = serviceObj.Name
+	fmt.Println("ipv4 service name: ", ipv4Service.Name)
+	ret.ServiceName = ipv6Service.Name
 
 	return ret, nil
 }
@@ -219,7 +220,7 @@ func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, erro
 }
 
 // Creates Nginx deployment and service for testing
-func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, error) {
+func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, *corev1.Service, error) {
 
 	var objs []client.Object
 
@@ -228,16 +229,17 @@ func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, error) {
 	defer lgr.Info("finished deploying nginx resources")
 
 	nginxDeployment := clients.NewNginxDeployment()
-	nginxService := clients.NewNginxService()
+	ipv4Service, ipv6Service := clients.NewNginxServices(p.Zones[0].GetName())
 	objs = append(objs, nginxDeployment)
-	objs = append(objs, nginxService)
+	objs = append(objs, ipv4Service)
+	objs = append(objs, ipv6Service)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
 		lgr.Error("Error deploying Nginx resources ")
-		return nginxService, logger.Error(lgr, err)
+		return ipv4Service, ipv6Service, logger.Error(lgr, err)
 	}
 
-	return nginxService, nil
+	return ipv4Service, ipv6Service, nil
 
 }
 

@@ -63,6 +63,7 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 		return nil
 	}
 
+	//TODO: Make these available to basic.go
 	publicZones := make([]string, len(infra.Zones))
 	for i, zone := range infra.Zones {
 		publicZones[i] = zone.GetId()

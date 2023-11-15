@@ -1,6 +1,8 @@
 package clients
 
 import (
+	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +21,8 @@ func NewNginxDeployment() *appsv1.Deployment {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "nginx",
+			Name:      "nginx",
+			Namespace: "kube-system",
 		},
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "nginx"}},
@@ -47,21 +50,22 @@ func NewNginxDeployment() *appsv1.Deployment {
 }
 
 // returns nginx service
-func NewNginxService() *corev1.Service {
-	annotations := make(map[string]string)
+func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 
-	svcObj := &corev1.Service{
+	fmt.Println("-------------------- Zone name in NewNginxServices: ", zoneName)
+	//annotations := make(map[string]string)
+	ipv4Service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        "nginx-svc",
+			Name:        "nginx-svc-ipv4",
 			Namespace:   "kube-system",
-			Annotations: annotations,
+			Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
 		},
 		Spec: corev1.ServiceSpec{
-			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyTypeLocal,
+			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyCluster,
 			Type:                  corev1.ServiceTypeLoadBalancer,
 			Selector:              map[string]string{"app": "nginx"},
 			Ports: []corev1.ServicePort{
@@ -74,7 +78,33 @@ func NewNginxService() *corev1.Service {
 		},
 	}
 
-	return svcObj
+	ipv6Service := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "nginx-svc-ipv6",
+			Namespace:   "kube-system",
+			Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
+		},
+		Spec: corev1.ServiceSpec{
+			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyCluster,
+			Type:                  corev1.ServiceTypeLoadBalancer,
+			Selector:              map[string]string{"app": "nginx"},
+			Ports: []corev1.ServicePort{
+				{
+					Protocol:   "TCP",
+					Port:       80,
+					TargetPort: intstr.FromInt(80),
+				},
+			},
+			// IPFamilyPolicy: to.Ptr(corev1.IPFamilyPolicyRequireDualStack),
+			IPFamilies: []corev1.IPFamily{corev1.IPv6Protocol},
+		},
+	}
+
+	return ipv4Service, ipv6Service
 }
 
 func WithPreferSystemNodes(spec *corev1.PodSpec) *corev1.PodSpec {

@@ -93,7 +93,8 @@ func ExternalDnsResources(conf *config.Config, self *appsv1.Deployment, external
 	fmt.Println("rg: ", externalDnsConfigs[0].ResourceGroup)
 	fmt.Println("subscription id: ", externalDnsConfigs[0].Subscription)
 	fmt.Println("tenant id: ", externalDnsConfigs[0].TenantId)
-	fmt.Println("zone resource paths: ", externalDnsConfigs[0].DnsZoneResourceIDs)
+	fmt.Println("public zone resource id: ", externalDnsConfigs[0].DnsZoneResourceIDs)
+	fmt.Println("private zone resource id: ", externalDnsConfigs[1].DnsZoneResourceIDs)
 	fmt.Println("provider: ", externalDnsConfigs[0].Provider)
 	fmt.Println("======================================================")
 	fmt.Println()
@@ -273,7 +274,7 @@ func newExternalDNSDeployment(conf *config.Config, externalDnsConfig *ExternalDn
 					ServiceAccountName: externalDnsConfig.Provider.ResourceName(),
 					Containers: []corev1.Container{*withLivenessProbeMatchingReadiness(withTypicalReadinessProbe(7979, &corev1.Container{
 						Name:  "controller",
-						Image: path.Join(conf.Registry, "/oss/kubernetes/external-dns:v0.11.0.2"),
+						Image: path.Join(conf.Registry, "/oss/kubernetes/external-dns:v0.14.0"),
 						Args: append([]string{
 							"--provider=" + externalDnsConfig.Provider.String(),
 							"--source=ingress",
