@@ -200,6 +200,7 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 		}
 	}
 
+	var ipAddr string
 	fmt.Println("Service ip: ", svcIp)
 	fmt.Println("Service zone name:", serviceDnsZoneName)
 	for pager.More() {
@@ -216,16 +217,23 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 			fmt.Println("In Loop!  dns record created ======================= :)")
 			fmt.Println()
 
-			//TODO: Switch/ case for every type of dns record
-
 			currZoneName := strings.Trim(*(v.Properties.Fqdn), ".") //removing trailing '.'
-			ipAddr := *(v.Properties.ARecords[0].IPv4Address)       // TODO: change for ipv6 addr
+
+			if recordType == armdns.RecordTypeA {
+				ipAddr = *(v.Properties.ARecords[0].IPv4Address)
+			} else if recordType == armdns.RecordTypeAAAA {
+				ipAddr = *(v.Properties.AaaaRecords[0].IPv6Address)
+			} else {
+				return fmt.Errorf("unable to match record type")
+			}
+
+			// TODO: change for ipv6 addr
 			fmt.Println("#4 =========== Ip address: ", ipAddr)
 			fmt.Println("#5 =========== Zone name: ", currZoneName)
 
 			if currZoneName == serviceDnsZoneName && ipAddr == svcIp {
 				fmt.Println()
-				fmt.Println(" ======================== Record matched!!! ====================")
+				fmt.Println(" ======================== Record matched!!! ==================== ")
 
 				return nil
 			}
