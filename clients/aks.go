@@ -118,7 +118,7 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 					VMSize:       to.Ptr("Standard_DS3_v2"),
 					Count:        to.Ptr(int32(2)),
 					Mode:         to.Ptr(armcontainerservice.AgentPoolModeSystem),
-					VnetSubnetID: to.Ptr(subnetId), //new
+					VnetSubnetID: to.Ptr(subnetId),
 				},
 			},
 			AddonProfiles: map[string]*armcontainerservice.ManagedClusterAddonProfile{
@@ -130,13 +130,9 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 				},
 			},
 			NetworkProfile: &armcontainerservice.NetworkProfile{
-				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginKubenet), //new
-				//ServiceCidrs: []*string{to.Ptr("fd12:3456:789a:1::/108"), to.Ptr("10.0.0.0/16")},
-				IPFamilies: []*armcontainerservice.IPFamily{to.Ptr(armcontainerservice.IPFamilyIPv4), to.Ptr(armcontainerservice.IPFamilyIPv6)}, //new,
+				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginKubenet),
+				IPFamilies:    []*armcontainerservice.IPFamily{to.Ptr(armcontainerservice.IPFamilyIPv4), to.Ptr(armcontainerservice.IPFamilyIPv6)},
 			},
-			// APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
-			// 	AuthorizedIPRanges: []*string{to.Ptr("IPv6"), to.Ptr("IPv4")}, //new
-			// },
 		},
 	}
 

@@ -19,7 +19,8 @@ import (
 // global exported vars used by tests
 var (
 	ClusterName    *string
-	Service        *corev1.Service
+	Ipv4Service    *corev1.Service
+	Ipv6Service    *corev1.Service
 	SubscriptionId string
 	ResourceGroup  string
 )
@@ -43,12 +44,19 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 	}
 	ClusterName = cluster.Name
 
-	svc, err := getServiceObj(ctx, infra.SubscriptionId, infra.ResourceGroup.GetName(), *ClusterName, infra.ServiceName)
+	ipv4Svc, err := getServiceObj(ctx, infra.SubscriptionId, infra.ResourceGroup.GetName(), *ClusterName, infra.Ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error getting service object")
 		return fmt.Errorf("error getting service object")
 	}
-	Service = svc
+	Ipv4Service = ipv4Svc
+
+	ipv6Svc, err := getServiceObj(ctx, infra.SubscriptionId, infra.ResourceGroup.GetName(), *ClusterName, infra.Ipv6ServiceName)
+	if err != nil {
+		lgr.Error("Error getting service object")
+		return fmt.Errorf("error getting service object")
+	}
+	Ipv6Service = ipv6Svc
 
 	runTestFn := func(t test, ctx context.Context) *logger.LoggedError {
 		lgr := logger.FromContext(ctx).With("test", t.GetName())

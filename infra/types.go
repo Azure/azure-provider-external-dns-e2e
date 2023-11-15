@@ -106,14 +106,15 @@ type serviceInfoInterface interface {
 }
 
 type Provisioned struct {
-	Name           string
-	Cluster        cluster
-	ResourceGroup  resourceGroup
-	SubscriptionId string
-	TenantId       string
-	Zones          []zone
-	PrivateZones   []privateZone
-	ServiceName    string
+	Name            string
+	Cluster         cluster
+	ResourceGroup   resourceGroup
+	SubscriptionId  string
+	TenantId        string
+	Zones           []zone
+	PrivateZones    []privateZone
+	Ipv4ServiceName string
+	Ipv6ServiceName string
 }
 
 type LoadableZone struct {
@@ -133,5 +134,6 @@ type LoadableProvisioned struct {
 	TenantId                                                                  string
 	Zones                                                                     []LoadableZone
 	PrivateZones                                                              []azure.Resource
-	ServiceName                                                               string
+	Ipv4ServiceName                                                           string
+	Ipv6ServiceName                                                           string
 }

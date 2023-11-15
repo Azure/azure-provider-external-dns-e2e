@@ -54,7 +54,8 @@ func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 		ResourceGroup:       *resourceGroup,
 		SubscriptionId:      p.SubscriptionId,
 		TenantId:            p.TenantId,
-		ServiceName:         p.ServiceName,
+		Ipv4ServiceName:     p.Ipv4ServiceName,
+		Ipv6ServiceName:     p.Ipv6ServiceName,
 	}, nil
 
 }
@@ -96,13 +97,14 @@ func (l LoadableProvisioned) Provisioned() (Provisioned, error) {
 	}
 
 	return Provisioned{
-		Name:           l.Name,
-		Cluster:        clients.LoadAks(l.Cluster, l.ClusterDnsServiceIp, l.ClusterLocation, l.ClusterPrincipalId, l.ClusterClientId, l.ClusterOptions),
-		Zones:          zs,
-		PrivateZones:   pzs,
-		ResourceGroup:  clients.LoadRg(l.ResourceGroup),
-		SubscriptionId: l.SubscriptionId,
-		TenantId:       l.TenantId,
-		ServiceName:    l.ServiceName,
+		Name:            l.Name,
+		Cluster:         clients.LoadAks(l.Cluster, l.ClusterDnsServiceIp, l.ClusterLocation, l.ClusterPrincipalId, l.ClusterClientId, l.ClusterOptions),
+		Zones:           zs,
+		PrivateZones:    pzs,
+		ResourceGroup:   clients.LoadRg(l.ResourceGroup),
+		SubscriptionId:  l.SubscriptionId,
+		TenantId:        l.TenantId,
+		Ipv4ServiceName: l.Ipv4ServiceName,
+		Ipv6ServiceName: l.Ipv6ServiceName,
 	}, nil
 }

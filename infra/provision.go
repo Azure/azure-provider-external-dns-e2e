@@ -179,8 +179,8 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
 
-	fmt.Println("ipv4 service name: ", ipv4Service.Name)
-	ret.ServiceName = ipv6Service.Name
+	ret.Ipv4ServiceName = ipv4Service.Name
+	ret.Ipv6ServiceName = ipv6Service.Name
 
 	return ret, nil
 }
