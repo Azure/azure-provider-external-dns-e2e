@@ -32,17 +32,17 @@ func basicSuite(in infra.Provisioned) []test {
 				return nil
 			},
 		},
-		// {
-		// 	name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-		// 	run: func(ctx context.Context) error {
+		{
+			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			run: func(ctx context.Context) error {
 
-		// 		if err := AAAARecordTest(ctx, in, corev1.IPFamilyPolicyRequireDualStack, true); err != nil {
-		// 			return err
-		// 		}
+				if err := AAAARecordTest(ctx, in, corev1.IPFamilyPolicyRequireDualStack, true); err != nil {
+					return err
+				}
 
-		// 		return nil
-		// 	},
-		// },
+				return nil
+			},
+		},
 
 		// {
 		// 	name: "public cluster + private DNS +  A Record",
