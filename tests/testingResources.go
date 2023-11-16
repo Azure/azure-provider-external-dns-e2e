@@ -58,14 +58,6 @@ func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, service *core
 	// Service.Spec.IPFamilyPolicy = &ipFamilyPolicy
 	service.Spec.IPFamilies = ipFamilyList
 
-	// //Debug statements ---
-	// fmt.Println("==========================================")
-	// fmt.Println()
-	// fmt.Println("In memory ip family policy: ", Service.Spec.IPFamilyPolicy)
-	// fmt.Println("In memory Service: ", Service.Spec.IPFamilies)
-	// fmt.Println("==========================================")
-	// fmt.Println()
-
 	//get kubeconfig
 	cred, err := clients.GetAzCred()
 	if err != nil {
@@ -79,18 +71,18 @@ func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, service *core
 
 	res, err := clientFactory.NewManagedClustersClient().ListClusterAdminCredentials(ctx, ResourceGroup, *ClusterName, nil)
 	if err != nil {
-		return fmt.Errorf("Unable to create managed clusters client")
+		return fmt.Errorf("unable to create managed clusters client")
 	}
 	kubeconfig := res.Kubeconfigs[0]
 
 	config, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig.Value)
 
 	if err != nil {
-		return fmt.Errorf("Unable to create rest config from kubeconfig")
+		return fmt.Errorf("unable to create rest config from kubeconfig")
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("Unable to clientset from rest config")
+		return fmt.Errorf("unable to clientset from rest config")
 	}
 
 	serviceInterface := clientset.CoreV1().Services("kube-system") //TODO: pass in namespace
@@ -99,7 +91,7 @@ func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, service *core
 	fmt.Println("***************************************")
 	//res, err := clientFactory.NewManagedClustersClient().GetAccessProfile(ctx, ResourceGroup, *ClusterName, "clusterUser", nil)
 	if err != nil {
-		return fmt.Errorf("failed to finish the request: %v", err)
+		return fmt.Errorf("failed to update the service: %v", err)
 	}
 
 	fmt.Println()
@@ -158,8 +150,9 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 		return fmt.Errorf("error getting service object after annotating")
 	}
 
-	//check that annotation was saved, get IP address
+	//check that annotation was saved
 	if serviceObj.Annotations[key] == value {
+		fmt.Println("service yaml: ", serviceObj)
 		return nil
 	} else {
 		return fmt.Errorf("service annotation was not saved")

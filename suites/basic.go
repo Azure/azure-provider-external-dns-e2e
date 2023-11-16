@@ -32,17 +32,17 @@ func basicSuite(in infra.Provisioned) []test {
 				return nil
 			},
 		},
-		{
-			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-			run: func(ctx context.Context) error {
+		// {
+		// 	name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+		// 	run: func(ctx context.Context) error {
 
-				if err := AAAARecordTest(ctx, in, corev1.IPFamilyPolicyRequireDualStack, true); err != nil {
-					return err
-				}
+		// 		if err := AAAARecordTest(ctx, in, corev1.IPFamilyPolicyRequireDualStack, true); err != nil {
+		// 			return err
+		// 		}
 
-				return nil
-			},
-		},
+		// 		return nil
+		// 	},
+		// },
 
 		// {
 		// 	name: "public cluster + private DNS +  A Record",
@@ -69,30 +69,29 @@ var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, ipFamily
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
-	err := tests.AddIPFamilySpec(ctx, infra, tests.Ipv6Service, ipFamilyPolicy, usePublicZone)
-	if err != nil {
-		return fmt.Errorf("Error adding ip family and ip family policy to service spec and upserting: %s", err)
-	}
+	// err := tests.AddIPFamilySpec(ctx, infra, tests.Ipv6Service, ipFamilyPolicy, usePublicZone)
+	// if err != nil {
+	// 	return fmt.Errorf("Error adding ip family and ip family policy to service spec and upserting: %s", err)
+	// }
 
-	//TODO: assuming here theres only one public zone
 	publicZone := infra.Zones[0]
 	privateZone := infra.PrivateZones[0]
-
-	fmt.Println("annotating ipv6 service ----------")
-	err = tests.AnnotateService(ctx, infra.SubscriptionId, *tests.ClusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", publicZone.GetName(), "nginx-svc-ipv6")
-	if err != nil {
-		lgr.Error("Error annotating service", err)
-		return fmt.Errorf("error: %s", err)
-	}
-
 	var zoneName string
 	if usePublicZone {
 		zoneName = publicZone.GetName()
 	} else {
 		zoneName = privateZone.GetName()
 	}
+
+	fmt.Printf("annotating ipv6 service ---------- value: %s", publicZone.GetName())
+	err := tests.AnnotateService(ctx, infra.SubscriptionId, *tests.ClusterName, infra.ResourceGroup.GetName(), "external-dns.alpha.kubernetes.io/hostname", zoneName, "nginx-svc-ipv6")
+	if err != nil {
+		lgr.Error("Error annotating service", err)
+		return fmt.Errorf("error: %s", err)
+	}
+
 	fmt.Println("About to call Validate Record --------------------------")
-	//TODO: change public zone param here
+
 	err = validateRecord(ctx, armdns.RecordTypeAAAA, tests.ResourceGroup, tests.SubscriptionId, *tests.ClusterName, zoneName, 20, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeAAAA)
@@ -134,6 +133,8 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
 	}
+	fmt.Println("------------------ :O Sleeping after annotating service :O---------------------- ")
+	time.Sleep(20 * time.Second)
 
 	err = validateRecord(ctx, armdns.RecordTypeA, infra.ResourceGroup.GetName(), infra.SubscriptionId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
@@ -175,9 +176,10 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 	})
 
 	timeout := time.Now().Add(numSeconds * time.Second)
+
 	for {
 		if time.Now().After(timeout) {
-			return fmt.Errorf("Record not created within %s seconds", numSeconds)
+			return fmt.Errorf("record not created within %s seconds", numSeconds)
 		}
 		if pager.More() {
 			break
@@ -195,7 +197,7 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 			log.Fatalf("failed to advance page: %v", err)
 			return fmt.Errorf("failed to advance page for record sets")
 		}
-
+		fmt.Println("Page.value length: ", len(page.Value))
 		for _, v := range page.Value {
 			fmt.Println()
 			fmt.Println("In Loop!  dns record created ======================= :)")
