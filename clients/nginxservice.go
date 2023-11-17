@@ -53,7 +53,7 @@ func NewNginxDeployment() *appsv1.Deployment {
 func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 
 	fmt.Println("-------------------- Zone name in NewNginxServices: ", zoneName)
-	annotations := make(map[string]string)
+	//annotations := make(map[string]string)
 	ipv4Service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -62,10 +62,10 @@ func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "nginx-svc-ipv4",
 			Namespace:   "kube-system",
-			Annotations: annotations,
+			Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
 		},
 		Spec: corev1.ServiceSpec{
-			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyTypeLocal, //change this to cluster for ipv6 test
+			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyCluster,
 			Type:                  corev1.ServiceTypeLoadBalancer,
 			Selector:              map[string]string{"app": "nginx"},
 			Ports: []corev1.ServicePort{
