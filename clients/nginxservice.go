@@ -60,9 +60,9 @@ func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        "nginx-svc-ipv4",
-			Namespace:   "kube-system",
-			Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
+			Name:      "nginx-svc-ipv4",
+			Namespace: "kube-system",
+			//Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
 		},
 		Spec: corev1.ServiceSpec{
 			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyCluster,
@@ -84,9 +84,9 @@ func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        "nginx-svc-ipv6",
-			Namespace:   "kube-system",
-			Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
+			Name:      "nginx-svc-ipv6",
+			Namespace: "kube-system",
+			//Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
 		},
 		Spec: corev1.ServiceSpec{
 			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyCluster,

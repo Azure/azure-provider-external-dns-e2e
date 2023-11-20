@@ -21,40 +21,40 @@ func basicSuite(in infra.Provisioned) []test {
 	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
 	return []test{
 
-		{
-			name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-			run: func(ctx context.Context) error {
-
-				if err := ARecordTest(ctx, in, true); err != nil {
-					return err
-				}
-
-				return nil
-			},
-		},
-		{
-			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-			run: func(ctx context.Context) error {
-
-				if err := AAAARecordTest(ctx, in, corev1.IPFamilyPolicyRequireDualStack, true); err != nil {
-					return err
-				}
-
-				return nil
-			},
-		},
-
 		// {
-		// 	name: "public cluster + private DNS +  A Record",
+		// 	name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
 		// 	run: func(ctx context.Context) error {
 
-		// 		if err := ARecordTest(ctx, in, false); err != nil {
+		// 		if err := ARecordTest(ctx, in, true); err != nil {
 		// 			return err
 		// 		}
 
 		// 		return nil
 		// 	},
 		// },
+		// {
+		// 	name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+		// 	run: func(ctx context.Context) error {
+
+		// 		if err := AAAARecordTest(ctx, in, corev1.IPFamilyPolicyRequireDualStack, true); err != nil {
+		// 			return err
+		// 		}
+
+		// 		return nil
+		// 	},
+		// },
+
+		{
+			name: "public cluster + private DNS +  A Record",
+			run: func(ctx context.Context) error {
+
+				if err := ARecordTest(ctx, in, false); err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
 		// {
 		// 	//public cluster + private DNS + AAAA
 		// },
