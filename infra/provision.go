@@ -20,6 +20,7 @@ const (
 	lenZones = 1
 	// lenPrivateZones is the number of private zones to provision
 	lenPrivateZones = 1
+	linkName        = "sample-link-name"
 )
 
 var (
@@ -50,29 +51,6 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	var subnetId string
 	var vnetId string
 
-	//create vnet
-	resEg.Go(func() error {
-		vnetId, subnetId, err = clients.NewVnet(ctx, subscriptionId, i.ResourceGroup, i.Location)
-		if err != nil {
-			return logger.Error(lgr, fmt.Errorf("creating vnet: %w", err))
-		}
-		return nil
-	})
-
-	if err := resEg.Wait(); err != nil {
-		return Provisioned{}, logger.Error(lgr, err)
-	}
-
-	resEg.Go(func() error {
-		ret.Cluster, err = clients.NewAks(ctx, subscriptionId, i.ResourceGroup, "cluster"+i.Suffix, i.Location, subnetId, i.McOpts...)
-
-		if err != nil {
-			return logger.Error(lgr, fmt.Errorf("creating managed cluster: %w", err))
-		}
-
-		return nil
-	})
-
 	//Add dns zone resource- Currently creating 1 private zone and 1 public zone
 	for idx := 0; idx < lenZones; idx++ {
 		func(idx int) {
@@ -98,6 +76,38 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 			})
 		}(idx)
 	}
+
+	if err := resEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
+
+	//create vnet and link
+	resEg.Go(func() error {
+		vnetId, subnetId, err = clients.NewVnet(ctx, subscriptionId, i.ResourceGroup, i.Location, ret.PrivateZones[0].GetName())
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating vnet: %w", err))
+		}
+
+		err = ret.PrivateZones[0].LinkVnet(ctx, linkName, vnetId)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating vnet link: %w", err))
+		}
+		return nil
+	})
+
+	if err := resEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
+
+	resEg.Go(func() error {
+		ret.Cluster, err = clients.NewAks(ctx, subscriptionId, i.ResourceGroup, "cluster"+i.Suffix, i.Location, subnetId, i.McOpts...)
+
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating managed cluster: %w", err))
+		}
+
+		return nil
+	})
 
 	if err := resEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)

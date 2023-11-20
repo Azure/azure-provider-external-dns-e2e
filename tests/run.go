@@ -18,11 +18,9 @@ import (
 
 // global exported vars used by tests
 var (
-	ClusterName    *string
-	Ipv4Service    *corev1.Service
-	Ipv6Service    *corev1.Service
-	SubscriptionId string
-	ResourceGroup  string
+	ClusterName *string
+	Ipv4Service *corev1.Service
+	Ipv6Service *corev1.Service
 )
 
 func init() {
@@ -34,8 +32,6 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("In All tests RUN FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>")
 
-	SubscriptionId = infra.SubscriptionId
-	ResourceGroup = infra.ResourceGroup.GetName()
 	//setting exported vars used by all tests
 	cluster, err := infra.Cluster.GetCluster(ctx)
 	if err != nil {
@@ -130,13 +126,4 @@ func getServiceObj(ctx context.Context, subId, rg, clusterName, serviceName stri
 	//success
 	return svcObj, nil
 
-}
-
-func keys[T comparable, V any](m map[T]V) []T {
-	ret := make([]T, 0, len(m))
-	for k := range m {
-		ret = append(ret, k)
-	}
-
-	return ret
 }

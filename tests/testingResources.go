@@ -9,17 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
-	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
@@ -34,97 +28,12 @@ const (
 	Txt   IpFamily = "TXT"
 )
 
-var cred azcore.TokenCredential
 var nonZeroExitCode = errors.New("non-zero exit code")
-var basicNs = make(map[string]*corev1.Namespace)
 
 type runCommandOpts struct {
 	// outputFile is the file to write the output of the command to. Useful for saving logs from a job or something similar
 	// where there's lots of logs that are extremely important and shouldn't be muddled up in the rest of the logs.
 	outputFile string
-}
-
-// adds ip record type to Service spec.ipFamilies and spec.ipFamilyPolicy.. used mainly for ipv6 dual stack clusters
-// but using it just for single stack testing to test ip families individually
-// zones passed in must be EITHER a public or private zone based on what the test requires
-func AddIPFamilySpec(ctx context.Context, infra infra.Provisioned, service *corev1.Service, ipFamilyPolicy corev1.IPFamilyPolicy, usePublicZone bool) error {
-
-	lgr := logger.FromContext(ctx).With("name", ClusterName, "resourceGroup", ResourceGroup)
-	ctx = logger.WithContext(ctx, lgr)
-	lgr.Info("Starting to update IP spec on Service")
-	defer lgr.Info("Finished updating IP spec")
-
-	ipFamilyList := []corev1.IPFamily{corev1.IPv6Protocol}
-	// Service.Spec.IPFamilyPolicy = &ipFamilyPolicy
-	service.Spec.IPFamilies = ipFamilyList
-
-	//get kubeconfig
-	cred, err := clients.GetAzCred()
-	if err != nil {
-		return fmt.Errorf("getting az credentials: %w", err)
-	}
-
-	clientFactory, err := armcontainerservice.NewClientFactory(SubscriptionId, cred, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create client: %v", err)
-	}
-
-	res, err := clientFactory.NewManagedClustersClient().ListClusterAdminCredentials(ctx, ResourceGroup, *ClusterName, nil)
-	if err != nil {
-		return fmt.Errorf("unable to create managed clusters client")
-	}
-	kubeconfig := res.Kubeconfigs[0]
-
-	config, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig.Value)
-
-	if err != nil {
-		return fmt.Errorf("unable to create rest config from kubeconfig")
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("unable to clientset from rest config")
-	}
-
-	serviceInterface := clientset.CoreV1().Services("kube-system") //TODO: pass in namespace
-	updatedService, err := serviceInterface.Update(ctx, service, v1.UpdateOptions{})
-
-	fmt.Println("***************************************")
-	//res, err := clientFactory.NewManagedClustersClient().GetAccessProfile(ctx, ResourceGroup, *ClusterName, "clusterUser", nil)
-	if err != nil {
-		return fmt.Errorf("failed to update the service: %v", err)
-	}
-
-	fmt.Println()
-	fmt.Println("=======================================")
-	fmt.Println("UPDATED ip families: ", updatedService.Spec.IPFamilies)
-	fmt.Println("UPDATED ip family policy:", updatedService.Spec.IPFamilyPolicy)
-	fmt.Println("=======================================")
-	fmt.Println()
-
-	return nil
-
-}
-
-func (ip IpFamily) convertValue() corev1.IPFamily {
-
-	switch ip {
-
-	case Ipv4:
-		return corev1.IPv4Protocol
-	case Ipv6:
-		return corev1.IPv6Protocol
-	case Cname:
-		//TODO
-	case Mx:
-		//TODO
-	case Txt:
-		//TODO
-	}
-
-	fmt.Println("returning default ipv4 protocol")
-	//default is an ipv4 address, change this later?
-	return corev1.IPv4Protocol
-
 }
 
 // Annotates Service and returns IP address on the load balancer
@@ -135,6 +44,11 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to Annotate service")
 	defer lgr.Info("finished annotating service")
+
+	fmt.Println()
+	fmt.Println("Annotation key: ", key)
+	fmt.Println("Annotation value: ", value)
+	fmt.Println()
 
 	//TODO: namespace parameter
 	cmd := fmt.Sprintf("kubectl annotate service --overwrite %s %s=%s -n kube-system", serviceName, key, value)
@@ -152,7 +66,6 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 
 	//check that annotation was saved
 	if serviceObj.Annotations[key] == value {
-		fmt.Println("service yaml: ", serviceObj)
 		return nil
 	} else {
 		return fmt.Errorf("service annotation was not saved")
