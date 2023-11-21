@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
@@ -28,9 +27,8 @@ var (
 )
 
 var (
-	virtualNetworksClient     *armnetwork.VirtualNetworksClient
-	virtualNetworkLinksClient *armprivatedns.VirtualNetworkLinksClient
-	subnetsClient             *armnetwork.SubnetsClient
+	virtualNetworksClient *armnetwork.VirtualNetworksClient
+	subnetsClient         *armnetwork.SubnetsClient
 )
 
 func NewVnet(ctx context.Context, subId, rg, region, privateZoneName string) (string, string, error) {
@@ -54,22 +52,13 @@ func NewVnet(ctx context.Context, subId, rg, region, privateZoneName string) (st
 
 	virtualNetworksClient = networkClientFactory.NewVirtualNetworksClient()
 	subnetsClient = networkClientFactory.NewSubnetsClient()
-	virtualNetworkLinksClient = privatednsClientFactory.NewVirtualNetworkLinksClient()
 
 	virtualNetwork, err := createVirtualNetwork(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	//log.Println("virtual network:", *virtualNetwork.ID)
 
 	subnet, err := createSubnet(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//log.Println("subnet:", *subnet.ID)
-
-	//link vnet
-	err = linkVnet(ctx, privateZoneName, rg, subId, *virtualNetwork.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -132,66 +121,3 @@ func createSubnet(ctx context.Context) (*armnetwork.Subnet, error) {
 	}
 	return &resp.Subnet, nil
 }
-
-func linkVnet(ctx context.Context, privateZoneName, rg, subId, vnetId string) error {
-
-	lgr := logger.FromContext(ctx).With("name", privateZoneName, "subscriptionId", subId, "resourceGroup", rg, "linkName", linkName, "vnetId", vnetId)
-	ctx = logger.WithContext(ctx, lgr)
-	lgr.Info("starting to link vnet")
-	defer lgr.Info("finished linking vnet")
-
-	cred, err := GetAzCred()
-	if err != nil {
-		return fmt.Errorf("getting az credentials: %w", err)
-	}
-
-	factory, err := armprivatedns.NewClientFactory(subId, cred, nil)
-	if err != nil {
-		return fmt.Errorf("creating client factory: %w", err)
-	}
-
-	l := armprivatedns.VirtualNetworkLink{
-		Location: to.Ptr("global"),
-		Properties: &armprivatedns.VirtualNetworkLinkProperties{
-			RegistrationEnabled: to.Ptr(false),
-			VirtualNetwork: &armprivatedns.SubResource{
-				ID: to.Ptr(vnetId),
-			},
-		},
-		Name: to.Ptr(linkName),
-	}
-	_, err = factory.NewVirtualNetworkLinksClient().BeginCreateOrUpdate(ctx, rg, privateZoneName, linkName, l, nil)
-	if err != nil {
-		return fmt.Errorf("creating virtual network link: %w", err)
-	}
-
-	return nil
-}
-
-// func createVirtualNetworkLink(ctx context.Context, privateZoneName, subnetID string) (*armprivatedns.VirtualNetworkLink, error) {
-
-// 	pollersResp, err := virtualNetworkLinksClient.BeginCreateOrUpdate(
-// 		ctx,
-// 		resourceGroupName,
-// 		privateZoneName,
-// 		"sample-private-dns-link",
-// 		armprivatedns.VirtualNetworkLink{
-// 			Location: to.Ptr("global"),
-// 			Properties: &armprivatedns.VirtualNetworkLinkProperties{
-// 				RegistrationEnabled: to.Ptr(false),
-// 				VirtualNetwork: &armprivatedns.SubResource{
-// 					ID: to.Ptr(subnetID),
-// 				},
-// 			},
-// 		},
-// 		nil,
-// 	)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	resp, err := pollersResp.PollUntilDone(ctx, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &resp.VirtualNetworkLink, nil
-// }

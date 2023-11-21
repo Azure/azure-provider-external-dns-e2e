@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -21,10 +20,6 @@ const (
 	// lenPrivateZones is the number of private zones to provision
 	lenPrivateZones = 1
 	linkName        = "sample-link-name"
-)
-
-var (
-	self *appsv1.Deployment = nil
 )
 
 func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) (Provisioned, *logger.LoggedError) {
@@ -51,7 +46,6 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	var subnetId string
 	var vnetId string
 
-	//Add dns zone resource- Currently creating 1 private zone and 1 public zone
 	for idx := 0; idx < lenZones; idx++ {
 		func(idx int) {
 			resEg.Go(func() error {
@@ -184,7 +178,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
 
-	ipv4Service, ipv6Service, err := deployNginx(ctx, ret) //TODO: confirm that we don't need ipv6 here
+	ipv4Service, ipv6Service, err := deployNginx(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}

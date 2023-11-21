@@ -73,6 +73,47 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 
 }
 
+// kubectl annotate service shopping-cart prometheus.io/scrape-
+func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
+
+	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
+	ctx = logger.WithContext(ctx, lgr)
+	lgr.Info("starting to clear annotations")
+	defer lgr.Info("finished removing all annotations on service: %s", serviceName)
+
+	serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
+	if err != nil {
+		return fmt.Errorf("error getting service object before clearing annotations")
+	}
+
+	annotations := serviceObj.Annotations
+	for key, _ := range annotations {
+		fmt.Println("removing key: ", key+"-")
+		cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
+
+		if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+			Command: to.Ptr(cmd),
+		}, runCommandOpts{}); err != nil {
+			return fmt.Errorf("running kubectl apply: %w", err)
+		}
+	}
+
+	//TODO: namespace parameter
+	serviceObj, err = getServiceObj(ctx, subId, rg, clusterName, serviceName)
+	if err != nil {
+		return fmt.Errorf("error getting service object after annotating")
+	}
+
+	//check that annotation was saved
+	if len(serviceObj.Annotations) == 0 {
+		fmt.Println("Cleared annotations successfully ================ ")
+		return nil
+	} else {
+		return fmt.Errorf("service annotations not cleared")
+	}
+
+}
+
 // TODO: param: add suport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
 func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName string) error {
 
@@ -118,6 +159,30 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 	} else {
 		return fmt.Errorf("external dns deployment is not running in pod, check logs")
 	}
+
+}
+
+// adds annotations needed specifically for private dns tests
+func PrivateDnsAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
+	// external-dns.alpha.kubernetes.io/internal-hostname: server-clusterip.example.com
+
+	// service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+	lgr := logger.FromContext(ctx)
+	lgr.Info("Adding annotations for private dns")
+
+	err := AnnotateService(ctx, subId, clusterName, rg, "service.beta.kubernetes.io/azure-load-balancer-internal", "true", serviceName)
+	if err != nil {
+		lgr.Error("Error annotating service to create internal load balancer ", err)
+		return fmt.Errorf("error: %s", err)
+	}
+
+	err = AnnotateService(ctx, subId, clusterName, rg, "external-dns.alpha.kubernetes.io/internal-hostname", "server-clusterip.example.com", serviceName)
+	if err != nil {
+		lgr.Error("Error annotating service for private dns", err)
+		return fmt.Errorf("error: %s", err)
+	}
+
+	return nil
 
 }
 
