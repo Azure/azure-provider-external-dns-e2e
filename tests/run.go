@@ -28,9 +28,12 @@ func init() {
 
 }
 
-func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
+//func getObjects for testing
+
+func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
+
 	lgr := logger.FromContext(ctx)
-	lgr.Info("In All tests RUN FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>")
+	lgr.Info("Setting objects for testing")
 
 	//setting exported vars used by all tests
 	cluster, err := infra.Cluster.GetCluster(ctx)
@@ -53,6 +56,15 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 		return fmt.Errorf("error getting service object")
 	}
 	Ipv6Service = ipv6Svc
+
+	return nil
+}
+
+func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
+
+	fmt.Println("in all tests run function")
+	lgr := logger.FromContext(ctx)
+	lgr.Info("In All tests RUN FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>")
 
 	runTestFn := func(t test, ctx context.Context) *logger.LoggedError {
 		lgr := logger.FromContext(ctx).With("test", t.GetName())
@@ -81,6 +93,7 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 	lgr.Info("starting to run tests")
 
 	var eg errgroup.Group
+
 	for _, t := range allTests {
 		func(t test) {
 			eg.Go(func() error {

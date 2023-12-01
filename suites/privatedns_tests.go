@@ -16,34 +16,34 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 )
 
-func basicSuite(in infra.Provisioned) []test {
+func privateDnsSuite(in infra.Provisioned) []test {
 
-	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
+	log.Printf("In private dns suite <<<<<<<<<<<<<<<<<<<<<<<<<<<")
 	return []test{
-
 		{
-			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			name: "public cluster + private DNS +  AAAA Record",
 			run: func(ctx context.Context) error {
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+				fmt.Println("Test private DNS + AAAA record")
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
-				fmt.Println("**********************************")
-				fmt.Println("Test public DNS + AAAA record")
-				fmt.Println("**********************************")
-				if err := AAAARecordTest(ctx, in, true); err != nil {
-					fmt.Println("BAD AAAA public ======================= ")
-
+				if err := AAAARecordTest2(ctx, in, false); err != nil {
+					fmt.Println("BAD AAAA private ======================= ")
 					return err
 				}
+
 				return nil
 			},
 		},
 		{
-			name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			name: "public cluster + private DNS +  A Record",
 			run: func(ctx context.Context) error {
-				fmt.Println("**********************************")
-				fmt.Println("Test public DNS + A record")
-				fmt.Println("**********************************")
-				if err := ARecordTest(ctx, in, true); err != nil {
-					fmt.Println("BAD A public ======================= ")
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+				fmt.Println("Test private DNS + A record")
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
+				if err := ARecordTest2(ctx, in, false); err != nil {
+					fmt.Println("BAD A  private ======================= ")
 					return err
 				}
 
@@ -53,7 +53,7 @@ func basicSuite(in infra.Provisioned) []test {
 	}
 }
 
-var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
+var AAAARecordTest2 = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
 
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
@@ -72,13 +72,7 @@ var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, usePubli
 		tests.PrivateDnsAnnotations(ctx, subId, *tests.ClusterName, resourceGroup, ipv6ServiceName)
 	}
 
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, infra.Ipv4ServiceName)
-	if err != nil {
-		lgr.Error("Error annotating service", err)
-		return fmt.Errorf("error: %s", err)
-	}
-
-	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv6ServiceName)
+	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv6ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
@@ -86,14 +80,14 @@ var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, usePubli
 
 	//Validating records
 	if usePublicZone {
-		err = validateRecord(ctx, armdns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, zoneName, 20, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
+		err = validateRecord2(ctx, armdns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, zoneName, 20, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
 		if err != nil {
 			return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeAAAA)
 		} else {
 			lgr.Info("finished successfully")
 		}
 	} else {
-		err = validatePrivateRecords(ctx, armprivatedns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
+		err = validatePrivateRecords2(ctx, armprivatedns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
 		if err != nil {
 			return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeAAAA)
 		} else {
@@ -105,9 +99,9 @@ var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned, usePubli
 
 }
 
-var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
+var ARecordTest2 = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
 	lgr := logger.FromContext(ctx)
-	lgr.Info("starting A record test")
+	lgr.Info("starting test")
 
 	//Currently only provisioning one public and one private zone, no test in this suite tests with more than one of each
 	resourceGroup := infra.ResourceGroup.GetName()
@@ -115,6 +109,13 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 	publicZone := infra.Zones[0]
 	privateZone := infra.PrivateZones[0]
 	ipv4ServiceName := infra.Ipv4ServiceName
+
+	// //printing values for debugging
+	// fmt.Println("Infra subId: ", infra.SubscriptionId)
+	// fmt.Println("Infra cluster name: ", *tests.ClusterName)
+	// fmt.Println("Infra rg: ", infra.ResourceGroup.GetName())
+	// fmt.Println("Infra zone name: ", publicZone.GetName())
+	// fmt.Println("ipv4 Infra Service name: ", infra.Ipv4ServiceName)
 
 	var zoneName string
 	if usePublicZone {
@@ -124,7 +125,13 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 		tests.PrivateDnsAnnotations(ctx, subId, *tests.ClusterName, resourceGroup, ipv4ServiceName)
 	}
 
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv4ServiceName)
+	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, infra.Ipv4ServiceName)
+	if err != nil {
+		lgr.Error("Error annotating service", err)
+		return fmt.Errorf("error: %s", err)
+	}
+
+	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service with zone name", err)
 		return fmt.Errorf("error: %s", err)
@@ -132,7 +139,7 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 
 	//Validating Records
 	if usePublicZone {
-		err = validateRecord(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
+		err = validateRecord2(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 		if err != nil {
 			return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 		} else {
@@ -140,7 +147,7 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 		}
 
 	} else {
-		err = validatePrivateRecords(ctx, armprivatedns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
+		err = validatePrivateRecords2(ctx, armprivatedns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 		if err != nil {
 			return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeA)
 		} else {
@@ -151,7 +158,9 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZo
 	return nil
 }
 
-func validatePrivateRecords(ctx context.Context, recordType armprivatedns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
+func validatePrivateRecords2(ctx context.Context, recordType armprivatedns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
+	fmt.Println()
+	fmt.Println("#0 In PRIVATE DNS validateRecord() function ---------------------")
 
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
@@ -226,7 +235,7 @@ func validatePrivateRecords(ctx context.Context, recordType armprivatedns.Record
 }
 
 // Checks to see whether record is created in Azure DNS
-func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
+func validateRecord2(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
 
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")

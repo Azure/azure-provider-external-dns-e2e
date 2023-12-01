@@ -29,13 +29,6 @@ var Infras = infras{
 		Suffix:        uuid.New().String(),
 		McOpts:        []clients.McOpt{clients.PrivateClusterOpt},
 	},
-	{
-		Name:          "osm cluster",
-		ResourceGroup: rg,
-		Location:      location,
-		Suffix:        uuid.New().String(),
-		McOpts:        []clients.McOpt{clients.OsmClusterOpt},
-	},
 }
 
 func (i infras) FilterNames(names []string) infras {

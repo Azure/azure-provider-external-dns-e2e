@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-provider-external-dns-e2e/suites"
+	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 )
 
 func init() {
@@ -51,9 +52,17 @@ var testCmd = &cobra.Command{
 			return fmt.Errorf("expected 1 provisioned infrastructure, got %d", len(provisioned))
 		}
 
+		//Should run public and private suites one at a time.
+
+		tests.SetObjectsForTesting(ctx, provisioned[0])
 		tests := suites.All(provisioned[0])
-		if err := tests.Run(context.Background(), provisioned[0]); err != nil {
-			return logger.Error(lgr, fmt.Errorf("test failed: %w", err))
+		fmt.Println("len tests: ", len(tests))
+		for _, suite := range tests {
+			fmt.Println("suite: ", suite)
+			if err := suite.Run(context.Background(), provisioned[0]); err != nil {
+				return logger.Error(lgr, fmt.Errorf("test failed: %w", err))
+			}
+
 		}
 
 		return nil

@@ -11,9 +11,6 @@ type test interface {
 
 // T is an interface for a single test
 type T interface {
-	// GetOperatorConfigs returns a slice of OperatorConfig structs that should be used for this test.
-	// All OperatorConfigs that are compatible should be returned.
-	//GetOperatorConfigs() []manifests.OperatorConfig
 	test
 }
 
