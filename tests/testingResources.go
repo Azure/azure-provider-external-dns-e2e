@@ -87,17 +87,17 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 	}
 
 	annotations := serviceObj.Annotations
-	for key, _ := range annotations {
-		fmt.Println("removing key: ", key+"-")
-		cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
+	for key := range annotations {
+		if key != "kubectl.kubernetes.io/last-applied-configuration" {
+			cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
 
-		if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-			Command: to.Ptr(cmd),
-		}, runCommandOpts{}); err != nil {
-			return fmt.Errorf("running kubectl apply: %w", err)
+			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+				Command: to.Ptr(cmd),
+			}, runCommandOpts{}); err != nil {
+				return fmt.Errorf("running kubectl apply: %w", err)
+			}
 		}
 	}
-
 	//TODO: namespace parameter
 	serviceObj, err = getServiceObj(ctx, subId, rg, clusterName, serviceName)
 	if err != nil {
@@ -106,7 +106,6 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 
 	//check that annotation was saved
 	if len(serviceObj.Annotations) == 0 {
-		fmt.Println("Cleared annotations successfully ================ ")
 		return nil
 	} else {
 		return fmt.Errorf("service annotations not cleared")
@@ -143,7 +142,7 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 	if deploy.Status.AvailableReplicas < 1 {
 		var i int = 0
 		for deploy.Status.AvailableReplicas < 1 {
-			fmt.Printf("======= ExternalDNS not available, checking again in %s seconds ====", timeout)
+			lgr.Info("======= ExternalDNS not available, checking again in %s seconds ====", timeout)
 			time.Sleep(timeout)
 			i++
 
