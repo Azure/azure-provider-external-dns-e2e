@@ -45,6 +45,7 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 	lgr.Info("starting to Annotate service")
 	defer lgr.Info("finished annotating service")
 
+	//TODO: remove all printlns in this file
 	fmt.Println()
 	fmt.Println("Annotation key: ", key)
 	fmt.Println("Annotation value: ", value)
@@ -87,7 +88,8 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 	}
 
 	annotations := serviceObj.Annotations
-	for key, _ := range annotations {
+	for key := range annotations {
+		//if key != "kubectl.kubernetes.io/last-applied-configuration" {
 		fmt.Println("removing key: ", key+"-")
 		cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
 
@@ -96,6 +98,8 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 		}, runCommandOpts{}); err != nil {
 			return fmt.Errorf("running kubectl apply: %w", err)
 		}
+		//}
+
 	}
 
 	//TODO: namespace parameter

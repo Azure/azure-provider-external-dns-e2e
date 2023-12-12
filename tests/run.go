@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/go-logr/logr"
-	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -18,9 +17,13 @@ import (
 
 // global exported vars used by tests
 var (
-	ClusterName *string
-	Ipv4Service *corev1.Service
-	Ipv6Service *corev1.Service
+	ClusterName   *string
+	Ipv4Service   *corev1.Service
+	Ipv6Service   *corev1.Service
+	PublicZone    string
+	PrivateZone   string
+	SubId         string
+	ResourceGroup string
 )
 
 func init() {
@@ -31,7 +34,6 @@ func init() {
 //func getObjects for testing
 
 func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
-
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Setting objects for testing")
 
@@ -43,6 +45,7 @@ func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 	}
 	ClusterName = cluster.Name
 
+	fmt.Println("getting ipv4 service object ==== ")
 	ipv4Svc, err := getServiceObj(ctx, infra.SubscriptionId, infra.ResourceGroup.GetName(), *ClusterName, infra.Ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error getting service object")
@@ -56,6 +59,12 @@ func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 		return fmt.Errorf("error getting service object")
 	}
 	Ipv6Service = ipv6Svc
+
+	//TODO:  change to use these vars across suites
+	PublicZone = infra.Zones[0].GetName()
+	PrivateZone = infra.PrivateZones[0].GetName()
+	SubId = infra.SubscriptionId
+	ResourceGroup = infra.ResourceGroup.GetName()
 
 	return nil
 }
@@ -79,35 +88,17 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 		return nil
 	}
 
-	//TODO: Make these available to basic.go
-	publicZones := make([]string, len(infra.Zones))
-	for i, zone := range infra.Zones {
-		publicZones[i] = zone.GetId()
-	}
-	privateZones := make([]string, len(infra.PrivateZones))
-	for i, zone := range infra.PrivateZones {
-		privateZones[i] = zone.GetId()
-	}
-
 	//Loop to run ALL Tests
 	lgr.Info("starting to run tests")
 
-	var eg errgroup.Group
-
 	for _, t := range allTests {
-		func(t test) {
-			eg.Go(func() error {
-				if err := runTestFn(t, ctx); err != nil {
-					return fmt.Errorf("running test: %w", err)
-				}
+		func(t test) error {
+			if err := runTestFn(t, ctx); err != nil {
+				return fmt.Errorf("running test: %w", err)
+			}
+			return nil
 
-				return nil
-			})
 		}(t)
-	}
-
-	if err := eg.Wait(); err != nil {
-		return err
 	}
 
 	lgr.Info("successfully finished running tests")
@@ -136,7 +127,6 @@ func getServiceObj(ctx context.Context, subId, rg, clusterName, serviceName stri
 		return nil, fmt.Errorf("error unmarshaling json for service: %s", err)
 	}
 
-	//success
 	return svcObj, nil
 
 }
