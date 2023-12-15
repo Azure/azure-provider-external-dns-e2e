@@ -25,11 +25,15 @@ func basicSuite(in infra.Provisioned) []test {
 				fmt.Println("**********************************")
 				fmt.Println("Test public DNS + A record")
 				fmt.Println("**********************************")
+				//tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
 				if err := ARecordTest(ctx, in, true); err != nil {
+					tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
+					fmt.Println()
 					fmt.Println("BAD A public ======================= ")
+					fmt.Println()
 					return err
 				}
-
+				tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
 				return nil
 			},
 		},
@@ -43,20 +47,12 @@ func basicSuite(in infra.Provisioned) []test {
 
 				if err := AAAARecordTest(ctx, in, true); err != nil {
 					fmt.Println("BAD AAAA public ======================= ")
-
+					tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
+					tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv6Service.Name)
 					return err
 				}
-				return nil
-			},
-		},
-		{
-			name: "removing annotations",
-			run: func(ctx context.Context) error {
-
-				err := tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
-				if err != nil {
-					return err
-				}
+				tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
+				tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv6Service.Name)
 				return nil
 			},
 		},

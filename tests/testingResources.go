@@ -77,6 +77,7 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 // kubectl annotate service shopping-cart prometheus.io/scrape-
 func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
 
+	fmt.Println("IN CLEAR ANNOTATIONS FUNCTION ++++++++++++++++")
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to clear annotations")
@@ -87,19 +88,22 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 		return fmt.Errorf("error getting service object before clearing annotations")
 	}
 
+	fmt.Println()
+	fmt.Println("Service Object before clearing annotations: ", serviceObj.Annotations)
+	fmt.Println()
+
 	annotations := serviceObj.Annotations
 	for key := range annotations {
-		//if key != "kubectl.kubernetes.io/last-applied-configuration" {
-		fmt.Println("removing key: ", key+"-")
-		cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
+		if key != "kubectl.kubernetes.io/last-applied-configuration" {
+			fmt.Println("removing key: ", key+"-")
+			cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
 
-		if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-			Command: to.Ptr(cmd),
-		}, runCommandOpts{}); err != nil {
-			return fmt.Errorf("running kubectl apply: %w", err)
+			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+				Command: to.Ptr(cmd),
+			}, runCommandOpts{}); err != nil {
+				return fmt.Errorf("running kubectl apply: %w", err)
+			}
 		}
-		//}
-
 	}
 
 	//TODO: namespace parameter
@@ -107,9 +111,12 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 	if err != nil {
 		return fmt.Errorf("error getting service object after annotating")
 	}
+	fmt.Println()
+	fmt.Println("Service Object after clearing annotations: ", serviceObj.Annotations)
+	fmt.Println()
 
 	//check that annotation was saved
-	if len(serviceObj.Annotations) == 0 {
+	if len(serviceObj.Annotations) == 1 {
 		fmt.Println("Cleared annotations successfully ================ ")
 		return nil
 	} else {
@@ -168,9 +175,6 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 
 // adds annotations needed specifically for private dns tests
 func PrivateDnsAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
-	// external-dns.alpha.kubernetes.io/internal-hostname: server-clusterip.example.com
-
-	// service.beta.kubernetes.io/azure-load-balancer-internal: "true"
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Adding annotations for private dns")
 

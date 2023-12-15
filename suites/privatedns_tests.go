@@ -20,22 +20,23 @@ func privateDnsSuite(in infra.Provisioned) []test {
 
 	log.Printf("In private dns suite <<<<<<<<<<<<<<<<<<<<<<<<<<<")
 	return []test{
-		// {
-		// 	name: "public cluster + private DNS +  A Record",
-		// 	run: func(ctx context.Context) error {
-		// 		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-		// 		fmt.Println("Test private DNS + A record")
-		// 		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-		// 		//tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
-		// 		if err := PrivateARecordTest(ctx, in); err != nil {
-		// 			fmt.Println("BAD A  private ======================= ")
-		// 			return err
-		// 		}
-		// 		//tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
+		{
+			name: "public cluster + private DNS +  A Record",
+			run: func(ctx context.Context) error {
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+				fmt.Println("Test private DNS + A record")
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+				//
+				if err := PrivateARecordTest(ctx, in); err != nil {
+					fmt.Println("BAD A  private ======================= ")
+					tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
+					return err
+				}
+				tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
 
-		// 		return nil
-		// 	},
-		// },
+				return nil
+			},
+		},
 		{
 			name: "public cluster + private DNS +  AAAA Record",
 			run: func(ctx context.Context) error {
@@ -44,9 +45,13 @@ func privateDnsSuite(in infra.Provisioned) []test {
 				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
 				if err := PrivateAAAARecordTest(ctx, in, false); err != nil {
+					tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
+					tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv6Service.Name)
 					fmt.Println("BAD AAAA private ======================= ")
 					return err
 				}
+				tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv4Service.Name)
+				tests.ClearAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, tests.Ipv6Service.Name)
 
 				return nil
 			},
@@ -105,7 +110,12 @@ var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned) erro
 
 	err := tests.PrivateDnsAnnotations(ctx, subId, *tests.ClusterName, resourceGroup, ipv4ServiceName)
 
-	//err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv4ServiceName)
+	if err != nil {
+		lgr.Error("Error annotating service", err)
+		return fmt.Errorf("error: %s", err)
+	}
+
+	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service with zone name", err)
 		return fmt.Errorf("error: %s", err)
