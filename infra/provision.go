@@ -225,7 +225,6 @@ func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, erro
 
 // Creates Nginx deployment and service for testing
 func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, *corev1.Service, error) {
-
 	var objs []client.Object
 
 	lgr := logger.FromContext(ctx).With("infra", p.Name)
@@ -249,7 +248,6 @@ func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, *corev1.S
 
 // Deploys ExternalDNS onto cluster
 func deployExternalDNS(ctx context.Context, p Provisioned) error {
-
 	lgr := logger.FromContext(ctx).With("infra", p.Name)
 	lgr.Info("deploying external DNS onto cluster")
 	defer lgr.Info("finished deploying ext DNS")

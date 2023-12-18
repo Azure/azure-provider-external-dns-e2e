@@ -38,6 +38,8 @@ func basicSuite(in infra.Provisioned) []test {
 		// 			tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 		// 			return err
 		// 		}
+		// 		lgr.Info("finished successfully, clearing annotions for service (ipv4)")
+		// 		fmt.Println("SUCCESS === Before clearing annotations for service (ipv4)")
 		// 		tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 
 		// 		return nil
@@ -66,12 +68,12 @@ func basicSuite(in infra.Provisioned) []test {
 					fmt.Println()
 					fmt.Println("######################### BAD AAAA public ######################### ")
 					fmt.Println()
-					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
-					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
+					//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
+					//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
 					return err
 				}
-				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
-				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
+				//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
+				//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
 				return nil
 			},
 		},
@@ -80,7 +82,7 @@ func basicSuite(in infra.Provisioned) []test {
 
 var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
-	lgr.Info("starting A record test")
+	lgr.Info("starting public dns + A record test")
 
 	//Currently only provisioning one public and one private zone, no test in this suite tests with more than one of each
 	resourceGroup := infra.ResourceGroup.GetName()
@@ -94,8 +96,8 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 		lgr.Error("Error annotating service with zone name", err)
 		return fmt.Errorf("error: %s", err)
 	}
-	//working without sleeping --
-	//Validating Records
+
+	//checking to see if A record was created in Azure DNS
 	err = validateRecord(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, publicZone, 50, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
@@ -108,27 +110,39 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 
 var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
-	lgr.Info("starting test")
+	lgr.Info("starting public dns + AAAA test")
 
 	resourceGroup := infra.ResourceGroup.GetName()
 	subId := infra.SubscriptionId
 	publicZone := infra.Zones[0].GetName()
 	ipv6ServiceName := infra.Ipv6ServiceName
+	ipv4ServiceName := infra.Ipv4ServiceName
 
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", publicZone, infra.Ipv4ServiceName)
+	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", publicZone, ipv6ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
-	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", publicZone, ipv6ServiceName)
+	fmt.Println()
+	fmt.Println("After annotating ipv6 service ====================== Going into second")
+	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", publicZone, ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
 	}
-	time.Sleep(100 * time.Second)
-	//Validating records
+
+	fmt.Println()
+	fmt.Println("After annotating second (ipv4) service ====================== ")
+
+	fmt.Println("before sleeping in public AAAA test =========== ")
+	time.Sleep(20 * time.Second)
+	fmt.Println("After sleeping, waiting for record ==== going into Validate Record ")
+
+	//Checking Azure DNS for AAAA record
 	err = validateRecord(ctx, armdns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, publicZone, 50, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
+	fmt.Println("After validateRecord returns ======================= ")
+
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeAAAA)
 	} else {
@@ -143,48 +157,64 @@ var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
+	fmt.Println("Checking that Record was created in Azure DNS ============== Going into Wait for external dns")
 
 	err := tests.WaitForExternalDns(ctx, numSeconds, subscriptionId, rg, clusterName)
+	fmt.Println("Done waiting for external dns pod running ==================== ")
 	if err != nil {
+		fmt.Println("External dns pod not running!!! ===================== ")
 		return fmt.Errorf("error waiting for ExternalDNS to start running %w", err)
 	}
 
+	fmt.Println("Before getting azure credentials ================ ")
 	cred, err := clients.GetAzCred()
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}
+
+	fmt.Println("Got azure credentials ==================== :)")
 
 	clientFactory, err := armdns.NewClientFactory(subscriptionId, cred, nil)
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
 		return fmt.Errorf("failed to create armdns.ClientFactory")
 	}
+	fmt.Println("Created ClientFactory ==================== :)")
 
 	timeout := time.Now().Add(numSeconds * time.Second)
 
 	var pageValue []*armdns.RecordSet
+	fmt.Println("Before entering for loop ==================== ")
 	for {
+		fmt.Println("entered for loop ===================== ")
 		if time.Now().After(timeout) {
+			fmt.Println("Returning error here from Validate Record FAILED=========================== ")
 			return fmt.Errorf("record not created within %s seconds", numSeconds)
 		}
+		fmt.Println("After checking if time is over ==========, creaing pager ")
 		pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, serviceDnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
 			Recordsetnamesuffix: nil,
 		})
+		fmt.Println("After creating pager ==================== ")
 		if pager.More() {
+			fmt.Println("In pager.More ====== ")
 			page, err := pager.NextPage(ctx)
 			if err != nil {
 				log.Fatalf("failed to advance page: %v", err)
 				return fmt.Errorf("failed to advance page for record sets")
 			}
+			fmt.Println("After page.NextPage(), no error ======== ")
 			if len(page.Value) > 0 {
 				pageValue = page.Value
 				break
 			}
 
 		}
-		//TODO: add interval to check
+		time.Sleep(2 * time.Second) //TODO: add interval to check
 
 	}
+	fmt.Println("After for loop ==================== :)")
+
 	fmt.Println("Before checking for record. pageValue: ", pageValue)
 	var ipAddr string
 	for _, v := range pageValue {
@@ -211,6 +241,7 @@ func validateRecord(ctx context.Context, recordType armdns.RecordType, rg, subsc
 
 	}
 	//test failed
+	fmt.Println("returning record not created === FAILURE ==== ")
 	return fmt.Errorf("record not created %s", recordType)
 
 }

@@ -76,7 +76,8 @@ var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned, usePubl
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
 	}
-
+	fmt.Println("before time.sleep in private AAAA record test")
+	time.Sleep(100 * time.Second)
 	//Validating records
 	if usePublicZone {
 		err = validateRecord2(ctx, armdns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, zoneName, 20, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
@@ -109,13 +110,6 @@ var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, useP
 	privateZone := infra.PrivateZones[0]
 	ipv4ServiceName := infra.Ipv4ServiceName
 
-	// //printing values for debugging
-	// fmt.Println("Infra subId: ", infra.SubscriptionId)
-	// fmt.Println("Infra cluster name: ", *tests.ClusterName)
-	// fmt.Println("Infra rg: ", infra.ResourceGroup.GetName())
-	// fmt.Println("Infra zone name: ", publicZone.GetName())
-	// fmt.Println("ipv4 Infra Service name: ", infra.Ipv4ServiceName)
-
 	var zoneName string
 	if usePublicZone {
 		zoneName = publicZone.GetName()
@@ -136,6 +130,8 @@ var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, useP
 		return fmt.Errorf("error: %s", err)
 	}
 
+	fmt.Println("before time.sleep in private A record test")
+	time.Sleep(100 * time.Second)
 	//Validating Records
 	if usePublicZone {
 		err = validateRecord2(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)

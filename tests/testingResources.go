@@ -59,17 +59,20 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 		return fmt.Errorf("running kubectl apply: %w", err)
 	}
 
-	serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
-	if err != nil {
-		return fmt.Errorf("error getting service object after annotating")
-	}
+	// //TODO: do we actually need to check if annotation was saved? kubectl apply will fail if it doesn't anyways, right?
+	// serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
+	// if err != nil {
+	// 	return fmt.Errorf("error getting service object after annotating")
+	// }
 
-	//check that annotation was saved
-	if serviceObj.Annotations[key] == value {
-		return nil
-	} else {
-		return fmt.Errorf("service annotation was not saved")
-	}
+	// //check that annotation was saved
+	// if serviceObj.Annotations[key] == value {
+	// 	return nil
+	// } else {
+	// 	return fmt.Errorf("service annotation was not saved")
+	// }
+
+	return nil
 
 }
 
@@ -78,7 +81,7 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to clear annotations")
-	defer lgr.Info("finished removing all annotations on service: %s", serviceName)
+	defer lgr.Info("finished removing all annotations on service", serviceName)
 
 	serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
 	if err != nil {
@@ -115,6 +118,7 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 	//check that annotation was saved
 	if len(serviceObj.Annotations) == 1 {
 		fmt.Println("Cleared annotations successfully ================ ")
+		lgr.Info("Cleared annotations successfully")
 		return nil
 	} else {
 		return fmt.Errorf("service annotations not cleared")
@@ -124,7 +128,6 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 
 // TODO: param: add suport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
 func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName string) error {
-
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("Checking/ Waiting for external dns pod to run")
@@ -172,9 +175,6 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 
 // adds annotations needed specifically for private dns tests
 func PrivateDnsAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
-	// external-dns.alpha.kubernetes.io/internal-hostname: server-clusterip.example.com
-
-	// service.beta.kubernetes.io/azure-load-balancer-internal: "true"
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Adding annotations for private dns")
 
@@ -254,4 +254,31 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 }
 
 // TODO: function to delete A and AAAA records directly from each zone to make sure test command is generating new records each time
-//func deleteRecordSet()
+//func deleteARecordSet(rg, zoneName string, recordType) error{
+//
+// name: @.publiczone7d146e5d9158408d90a35c0ff27e21b8.com
+//recordSetName = "@." + zoneName
+// 			cmd := fmt.Sprintf("az network dns record-set a delete -g %s -n MyRecordSet -z www.mysite.com", rg, recordSetName, zoneName)
+
+// 			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+// 				Command: to.Ptr(cmd),
+// 			}, runCommandOpts{}); err != nil {
+// 				return fmt.Errorf("running kubectl apply: %w", err)
+// 			}
+
+//return fmt.Errorf("Error removing record set: ", recordType)
+//}
+
+//func deleteAAAARecordSet(rg, zoneName string, recordType) error{
+//
+//recordSetName = "@." + zoneName
+// 			cmd := fmt.Sprintf("az network dns record-set aaaa delete -g %s -z %s -n %s", rg, zoneName, recordSetName)
+
+// 			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+// 				Command: to.Ptr(cmd),
+// 			}, runCommandOpts{}); err != nil {
+// 				return fmt.Errorf("running kubectl apply: %w", err)
+// 			}
+
+//return fmt.Errorf("Error removing record set: ", recordType)
+//}

@@ -1,8 +1,6 @@
 package clients
 
 import (
-	"fmt"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,9 +49,6 @@ func NewNginxDeployment() *appsv1.Deployment {
 
 // returns nginx service
 func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
-
-	fmt.Println("-------------------- Zone name in NewNginxServices: ", zoneName)
-	//annotations := make(map[string]string)
 	ipv4Service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -62,7 +57,6 @@ func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "nginx-svc-ipv4",
 			Namespace: "kube-system",
-			//Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
 		},
 		Spec: corev1.ServiceSpec{
 			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyCluster,
