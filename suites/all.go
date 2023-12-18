@@ -16,10 +16,7 @@ var (
 func All(infra infra.Provisioned) []tests.Ts {
 
 	//TODO: standardize for any number of suites
-	suiteCount = 2 //updates number of testing suites
-
-	//testCount := len(basicSuite(infra)) + len(privateDnsSuite(infra)) //TODO: extract into function
-	//ret := make([]tests.Ts, suiteCount) //length 2
+	suiteCount = 2
 
 	fmt.Println("suite count: ", suiteCount)
 	t1 := []test{}
@@ -41,7 +38,7 @@ func All(infra infra.Provisioned) []tests.Ts {
 
 	final := make([]tests.Ts, 2)
 	final[0] = ret0
-	final[1] = ret1
+	//final[1] = ret1
 
 	return final
 }

@@ -86,7 +86,6 @@ func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "nginx-svc-ipv6",
 			Namespace: "kube-system",
-			//Annotations: map[string]string{"external-dns.alpha.kubernetes.io/hostname": zoneName},
 		},
 		Spec: corev1.ServiceSpec{
 			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyCluster,

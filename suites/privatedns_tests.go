@@ -27,7 +27,7 @@ func privateDnsSuite(in infra.Provisioned) []test {
 				fmt.Println("Test private DNS + AAAA record")
 				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
-				if err := AAAARecordTest2(ctx, in, false); err != nil {
+				if err := PrivateAAAATest(ctx, in, false); err != nil {
 					fmt.Println("BAD AAAA private ======================= ")
 					return err
 				}
@@ -42,7 +42,7 @@ func privateDnsSuite(in infra.Provisioned) []test {
 				fmt.Println("Test private DNS + A record")
 				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
-				if err := ARecordTest2(ctx, in, false); err != nil {
+				if err := PrivateARecordTest(ctx, in, false); err != nil {
 					fmt.Println("BAD A  private ======================= ")
 					return err
 				}
@@ -53,8 +53,7 @@ func privateDnsSuite(in infra.Provisioned) []test {
 	}
 }
 
-var AAAARecordTest2 = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
-
+var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
@@ -99,7 +98,7 @@ var AAAARecordTest2 = func(ctx context.Context, infra infra.Provisioned, usePubl
 
 }
 
-var ARecordTest2 = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
+var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 

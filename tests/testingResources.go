@@ -75,7 +75,6 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 
 // kubectl annotate service shopping-cart prometheus.io/scrape-
 func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
-
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to clear annotations")
@@ -86,15 +85,21 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 		return fmt.Errorf("error getting service object before clearing annotations")
 	}
 
-	annotations := serviceObj.Annotations
-	for key, _ := range annotations {
-		fmt.Println("removing key: ", key+"-")
-		cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
+	fmt.Println()
+	fmt.Println("Service Object before clearing annotations: ", serviceObj.Annotations)
+	fmt.Println()
 
-		if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-			Command: to.Ptr(cmd),
-		}, runCommandOpts{}); err != nil {
-			return fmt.Errorf("running kubectl apply: %w", err)
+	annotations := serviceObj.Annotations
+	for key := range annotations {
+		if key != "kubectl.kubernetes.io/last-applied-configuration" {
+			fmt.Println("removing key: ", key+"-")
+			cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
+
+			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+				Command: to.Ptr(cmd),
+			}, runCommandOpts{}); err != nil {
+				return fmt.Errorf("running kubectl apply: %w", err)
+			}
 		}
 	}
 
@@ -103,9 +108,12 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 	if err != nil {
 		return fmt.Errorf("error getting service object after annotating")
 	}
+	fmt.Println()
+	fmt.Println("Service Object after clearing annotations: ", serviceObj.Annotations)
+	fmt.Println()
 
 	//check that annotation was saved
-	if len(serviceObj.Annotations) == 0 {
+	if len(serviceObj.Annotations) == 1 {
 		fmt.Println("Cleared annotations successfully ================ ")
 		return nil
 	} else {
@@ -196,38 +204,31 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	defer lgr.Info("finished running command for testing")
 
 	emptyResp := &armcontainerservice.CommandResultProperties{}
-	//fmt.Println("#1 Before getting az creds")
 	cred, err := clients.GetAzCred()
 	if err != nil {
 		return *emptyResp, fmt.Errorf("getting az credentials: %w", err)
 	}
 
-	//fmt.Println("#2 Before creating managed cluster client")
 	client, err := armcontainerservice.NewManagedClustersClient(subId, cred, nil)
 	if err != nil {
 		return *emptyResp, fmt.Errorf("creating aks client: %w", err)
 	}
 
-	//fmt.Println("#3 Before BeginRunCommand() call")
 	poller, err := client.BeginRunCommand(ctx, rg, clusterName, request, nil)
 	if err != nil {
 		return *emptyResp, fmt.Errorf("starting run command: %w", err)
 	}
 
-	//fmt.Println("#4 Before Poller PollUnitlDone() call")
 	result, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
 		return *emptyResp, fmt.Errorf("running command: %w", err)
 	}
 
-	//fmt.Println("#5 Before Checking Logs")
 	logs := ""
 	if result.Properties != nil && result.Properties.Logs != nil {
 		logs = *result.Properties.Logs
-		//fmt.Println("logs from run command in testing: ", logs)
 	}
 
-	//fmt.Println("#5 Before output file code")
 	if opt.outputFile != "" {
 
 		outputFile, err := os.OpenFile(opt.outputFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -244,12 +245,13 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 		lgr.Info("using command logs, no output file specified")
 	}
 
-	//fmt.Println("#6 Before checking exit code")
 	if *result.Properties.ExitCode != 0 {
 		lgr.Info(fmt.Sprintf("command failed with exit code %d", *result.Properties.ExitCode))
 		return *result.Properties, nonZeroExitCode
 	}
 
-	//fmt.Println("returning logs with no error >>>>>>>>>>>>>>>>>>>>>")
 	return *result.Properties, nil
 }
+
+// TODO: function to delete A and AAAA records directly from each zone to make sure test command is generating new records each time
+//func deleteRecordSet()

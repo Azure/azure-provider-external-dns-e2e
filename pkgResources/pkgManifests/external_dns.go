@@ -84,21 +84,6 @@ type ExternalDnsConfig struct {
 
 // ExternalDnsResources returns Kubernetes objects required for external dns
 func ExternalDnsResources(conf *config.Config, self *appsv1.Deployment, externalDnsConfigs []*ExternalDnsConfig) []client.Object {
-
-	fmt.Println()
-	fmt.Println("In External Dns Resources, values used in creating objects: ")
-	fmt.Println("--------------------------------------------------------------")
-	fmt.Println()
-	fmt.Println("======================================================")
-	fmt.Println("rg: ", externalDnsConfigs[0].ResourceGroup)
-	fmt.Println("subscription id: ", externalDnsConfigs[0].Subscription)
-	fmt.Println("tenant id: ", externalDnsConfigs[0].TenantId)
-	fmt.Println("public zone resource id: ", externalDnsConfigs[0].DnsZoneResourceIDs)
-	fmt.Println("private zone resource id: ", externalDnsConfigs[1].DnsZoneResourceIDs)
-	fmt.Println("provider: ", externalDnsConfigs[0].Provider)
-	fmt.Println("======================================================")
-	fmt.Println()
-
 	var objs []client.Object
 
 	// Can safely assume the namespace exists if using kube-system
