@@ -24,22 +24,12 @@ func basicSuite(in infra.Provisioned) []test {
 
 				if err := ARecordTest(ctx, in); err != nil {
 					fmt.Println("{Public} DNS + A RECORD test failed ==================== ")
-					err = tests.DeleteRecordSet(ctx, *tests.ClusterName, in.SubscriptionId, in.ResourceGroup.GetName(), tests.PublicZone, armdns.RecordTypeA)
-					if err != nil {
-						lgr.Error("Error deleting A record set")
-						return fmt.Errorf("error deleting A record set")
-					}
 					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 					return err
 				}
 
 				fmt.Println("{Public} DNS + A RECORD TEST FINISHED SUCCESSFULLY, CLEARING SERVICE ANNOTATIONS :))))")
 				lgr.Info("\n ======== Public ipv4 test finished successfully, clearing service annotations ======== \n")
-				err := tests.DeleteRecordSet(ctx, *tests.ClusterName, in.SubscriptionId, in.ResourceGroup.GetName(), tests.PublicZone, armdns.RecordTypeA)
-				if err != nil {
-					lgr.Error("Error deleting A record set")
-					return fmt.Errorf("error deleting A record set")
-				}
 				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 
 				return nil
@@ -72,25 +62,34 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	//Currently only provisioning one public and one private zone, no test in this suite tests with more than one of each
 	resourceGroup := infra.ResourceGroup.GetName()
 	subId := infra.SubscriptionId
-	publicZone := infra.Zones[0].GetName()
-
 	ipv4ServiceName := infra.Ipv4ServiceName
 
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", publicZone, ipv4ServiceName)
+	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", tests.PublicZone, ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service with zone name", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
 	//checking to see if A record was created in Azure DNS
-	time.Sleep(20 * time.Second)
-	err = validateRecord(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, publicZone, 20, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
+	time.Sleep(50 * time.Second)
+	err = validateRecord(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, tests.PublicZone, 50, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
+		//attempting to delete record set here in case record was created after 50 seconds
+		err = tests.DeleteRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, tests.PublicZone, armdns.RecordTypeA)
+		if err != nil {
+			lgr.Error("Error deleting A record set")
+			return fmt.Errorf("error deleting A record set")
+		}
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
 		lgr.Info("Test Passed: Public dns + A record")
 	}
 
+	err = tests.DeleteRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, tests.PublicZone, armdns.RecordTypeA)
+	if err != nil {
+		lgr.Error("Error deleting A record set")
+		return fmt.Errorf("error deleting A record set")
+	}
 	return nil
 }
 
