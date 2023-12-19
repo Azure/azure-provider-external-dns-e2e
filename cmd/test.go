@@ -56,9 +56,8 @@ var testCmd = &cobra.Command{
 
 		tests.SetObjectsForTesting(ctx, provisioned[0])
 		tests := suites.All(provisioned[0])
-		fmt.Println("len tests: ", len(tests))
+
 		for _, suite := range tests {
-			fmt.Println("suite: ", suite)
 			if err := suite.Run(context.Background(), provisioned[0]); err != nil {
 				return logger.Error(lgr, fmt.Errorf("test failed: %w", err))
 			}

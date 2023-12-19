@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	appsv1 "k8s.io/api/apps/v1"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
@@ -37,19 +38,13 @@ type runCommandOpts struct {
 	outputFile string
 }
 
-// Annotates Service and returns IP address on the load balancer
-// adds annotation specifically under spec
+// Annotates Service with given key, value pair
 func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, serviceName string) error {
 
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to Annotate service")
 	defer lgr.Info("finished annotating service")
-
-	fmt.Println()
-	fmt.Println("Annotation key: ", key)
-	fmt.Println("Annotation value: ", value)
-	fmt.Println()
 
 	//TODO: namespace parameter
 	cmd := fmt.Sprintf("kubectl annotate service --overwrite %s %s=%s -n kube-system", serviceName, key, value)
@@ -60,7 +55,7 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 		return fmt.Errorf("running kubectl apply: %w", err)
 	}
 
-	// //TODO: do we actually need to check if annotation was saved? kubectl apply will fail if it doesn't anyways, right?
+	// //TODO: This check takes extra time, slows down tests. Do we actually need to check if annotation was saved? kubectl apply will fail if it doesn't anyways, right?
 	// serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
 	// if err != nil {
 	// 	return fmt.Errorf("error getting service object after annotating")
@@ -77,26 +72,22 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, se
 
 }
 
-// kubectl annotate service shopping-cart prometheus.io/scrape-
+// Removes all annotations except for last-applied-configuration which is needed by kubectl apply
+// Called before test exits to clean up resources
 func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to clear annotations")
-	defer lgr.Info("finished removing all annotations on service", serviceName)
+	defer lgr.Info("finished removing all annotations on service")
 
 	serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
 	if err != nil {
 		return fmt.Errorf("error getting service object before clearing annotations")
 	}
 
-	fmt.Println()
-	fmt.Println("Service Object before clearing annotations: ", serviceObj.Annotations)
-	fmt.Println()
-
 	annotations := serviceObj.Annotations
 	for key := range annotations {
 		if key != "kubectl.kubernetes.io/last-applied-configuration" {
-			fmt.Println("removing key: ", key+"-")
 			cmd := fmt.Sprintf("kubectl annotate service %s %s -n kube-system", serviceName, key+"-")
 
 			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
@@ -112,13 +103,9 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 	if err != nil {
 		return fmt.Errorf("error getting service object after annotating")
 	}
-	fmt.Println()
-	fmt.Println("Service Object after clearing annotations: ", serviceObj.Annotations)
-	fmt.Println()
 
-	//check that annotation was saved
+	//check that only last-applied-configuration annotation is left
 	if len(serviceObj.Annotations) == 1 {
-		fmt.Println("Cleared annotations successfully ================ ")
 		lgr.Info("Cleared annotations successfully")
 		return nil
 	} else {
@@ -128,6 +115,7 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 }
 
 // TODO: param: add suport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
+// Checks to see that external dns pod is running
 func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName string) error {
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
@@ -135,7 +123,7 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 	defer lgr.Info("Done waiting for external dns pod")
 
 	resultProperties, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-		Command: to.Ptr("kubectl get deploy external-dns -n kube-system -o json"),
+		Command: to.Ptr("kubectl get deploy external-dns -n kube-system -o json"), //TODO: provider as a param
 	}, runCommandOpts{})
 
 	if err != nil {
@@ -155,7 +143,7 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 	if deploy.Status.AvailableReplicas < 1 {
 		var i int = 0
 		for deploy.Status.AvailableReplicas < 1 {
-			fmt.Printf("======= ExternalDNS not available, checking again in %s seconds ====", timeout)
+			lgr.Info("======= ExternalDNS not available, checking again in %s seconds ====", timeout)
 			time.Sleep(timeout)
 			i++
 
@@ -174,7 +162,8 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 
 }
 
-// adds annotations needed specifically for private dns tests
+// Adds annotations needed specifically for private dns tests
+// TODO: change annotate service to take a map of kep value pairs instead of adding one annotatoin at a time
 func PrivateDnsAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Adding annotations for private dns")
@@ -196,8 +185,6 @@ func PrivateDnsAnnotations(ctx context.Context, subId, clusterName, rg, serviceN
 }
 
 func RunCommand(ctx context.Context, subId, rg, clusterName string, request armcontainerservice.RunCommandRequest, opt runCommandOpts) (armcontainerservice.CommandResultProperties, error) {
-	fmt.Println("IN RUN COMMAND for command for Tests +++++++++++++ command: ", *request.Command)
-
 	lgr := logger.FromContext(ctx)
 	ctx = logger.WithContext(ctx, lgr)
 
@@ -207,25 +194,21 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	emptyResp := &armcontainerservice.CommandResultProperties{}
 	cred, err := clients.GetAzCred()
 	if err != nil {
-		fmt.Println("Failed here #1")
 		return *emptyResp, fmt.Errorf("getting az credentials: %w", err)
 	}
 
 	client, err := armcontainerservice.NewManagedClustersClient(subId, cred, nil)
 	if err != nil {
-		fmt.Println("Failed here #2")
 		return *emptyResp, fmt.Errorf("creating aks client: %w", err)
 	}
 
 	poller, err := client.BeginRunCommand(ctx, rg, clusterName, request, nil)
 	if err != nil {
-		fmt.Println("Failed here #3")
 		return *emptyResp, fmt.Errorf("starting run command: %w", err)
 	}
 
 	result, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
-		fmt.Println("Failed here #4")
 		return *emptyResp, fmt.Errorf("running command: %w", err)
 	}
 
@@ -251,7 +234,6 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	}
 
 	if *result.Properties.ExitCode != 0 {
-		fmt.Println("Failed here #5")
 		lgr.Info(fmt.Sprintf("command failed with exit code %d", *result.Properties.ExitCode))
 		return *result.Properties, nonZeroExitCode
 	}
@@ -260,6 +242,7 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 }
 
 // TODO: function to delete A and AAAA records directly from each zone to make sure test command is generating new records each time
+// Deletes record sets created in Azure DNS, needed for all tests to run properly
 func DeleteRecordSet(ctx context.Context, clusterName, subId, rg, zoneName string, recordType armdns.RecordType) error {
 	lgr := logger.FromContext(ctx)
 
@@ -274,7 +257,31 @@ func DeleteRecordSet(ctx context.Context, clusterName, subId, rg, zoneName strin
 		lgr.Error("failed to create client: %v", err)
 		return err
 	}
-	_, err = clientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, "@", armdns.RecordTypeA, &armdns.RecordSetsClientDeleteOptions{IfMatch: nil})
+	_, err = clientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, "@", recordType, &armdns.RecordSetsClientDeleteOptions{IfMatch: nil})
+	if err != nil {
+		lgr.Error("failed to delete record set: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// TODO: function to delete A and AAAA records directly from each zone to make sure test command is generating new records each time
+func DeletePrivateRecordSet(ctx context.Context, clusterName, subId, rg, zoneName string, recordType armprivatedns.RecordType) error {
+	lgr := logger.FromContext(ctx)
+
+	cred, err := clients.GetAzCred()
+	if err != nil {
+		lgr.Error("Error getting azure credentials")
+		return err
+	}
+
+	clientFactory, err := armprivatedns.NewClientFactory(subId, cred, nil)
+	if err != nil {
+		lgr.Error("failed to create client: %v", err)
+		return err
+	}
+	_, err = clientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, recordType, "@", &armprivatedns.RecordSetsClientDeleteOptions{IfMatch: nil})
 	if err != nil {
 		lgr.Error("failed to delete record set: %v", err)
 		return err

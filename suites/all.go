@@ -18,7 +18,6 @@ func All(infra infra.Provisioned) []tests.Ts {
 	//TODO: standardize for any number of suites
 	suiteCount = 2
 
-	fmt.Println("suite count: ", suiteCount)
 	t1 := []test{}
 	t2 := []test{}
 	t1 = append(t1, basicSuite(infra)...)
@@ -27,12 +26,10 @@ func All(infra infra.Provisioned) []tests.Ts {
 	ret0 := make(tests.Ts, 2)
 	ret1 := make(tests.Ts, 2)
 	for i, t := range t1 {
-		fmt.Println("appending test: ", t.GetName())
 		ret0[i] = t
 	}
 
 	for i, t := range t2 {
-		fmt.Println("appending test: ", t.GetName())
 		ret1[i] = t
 	}
 

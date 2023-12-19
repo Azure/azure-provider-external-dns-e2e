@@ -69,9 +69,8 @@ func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 }
 
 func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
-	fmt.Println("in all tests run function")
 	lgr := logger.FromContext(ctx)
-	lgr.Info("In All tests RUN FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>")
+	lgr.Info("Starting to run all tests in suite")
 
 	runTestFn := func(t test, ctx context.Context) *logger.LoggedError {
 		lgr := logger.FromContext(ctx).With("test", t.GetName())
