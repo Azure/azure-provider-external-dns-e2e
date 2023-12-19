@@ -19,32 +19,32 @@ func basicSuite(in infra.Provisioned) []test {
 
 	log.Printf("In basic suite >>>>>>>>>>>>>>>>>>>>>>")
 	return []test{
-		// {
-		// 	name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
-		// 	run: func(ctx context.Context) error {
-		// 		fmt.Println("**********************************")
-		// 		fmt.Println("Test public DNS + A record")
-		// 		fmt.Println("**********************************")
-		// 		lgr := logger.FromContext(ctx)
-		// 		err := tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
-		// 		if err != nil {
-		// 			lgr.Error("Error clearing annotations for service (ipv4)", err)
-		// 			return err
-		// 		}
-		// 		if err := ARecordTest(ctx, in); err != nil {
-		// 			fmt.Println()
-		// 			fmt.Println("######################### BAD A public ######################### ")
-		// 			fmt.Println()
-		// 			tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
-		// 			return err
-		// 		}
-		// 		lgr.Info("finished successfully, clearing annotions for service (ipv4)")
-		// 		fmt.Println("SUCCESS === Before clearing annotations for service (ipv4)")
-		// 		tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
+		{
+			name: "public cluster + public DNS +  A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
+			run: func(ctx context.Context) error {
+				fmt.Println("**********************************")
+				fmt.Println("Test public DNS + A record")
+				fmt.Println("**********************************")
+				lgr := logger.FromContext(ctx)
+				//err := tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
+				// if err != nil {
+				// 	lgr.Error("Error clearing annotations for service (ipv4)", err)
+				// 	return err
+				// }
+				if err := ARecordTest(ctx, in); err != nil {
+					fmt.Println()
+					fmt.Println("######################### BAD A public ######################### ")
+					fmt.Println()
+					//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
+					return err
+				}
+				lgr.Info("finished successfully, clearing annotions for service (ipv4)")
+				fmt.Println("SUCCESS === Before clearing annotations for service (ipv4)")
+				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 
-		// 		return nil
-		// 	},
-		// },
+				return nil
+			},
+		},
 		{
 			name: "public cluster + public DNS +  Quad A Record", //public cluster + public DNS + A Record TODO: set naming convention for all tests
 			run: func(ctx context.Context) error {
@@ -52,18 +52,18 @@ func basicSuite(in infra.Provisioned) []test {
 				fmt.Println("**********************************")
 				fmt.Println("Test public DNS + AAAA record")
 				fmt.Println("**********************************")
-				lgr := logger.FromContext(ctx)
-				err := tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
-				if err != nil {
-					lgr.Error("Error clearing annotations for service (ipv4)", err)
-					return err
-				}
+				//lgr := logger.FromContext(ctx)
+				// err := tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
+				// if err != nil {
+				// 	lgr.Error("Error clearing annotations for service (ipv4)", err)
+				// 	return err
+				// }
 
-				err = tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
-				if err != nil {
-					lgr.Error("Error clearing annotations for service (ipv6)", err)
-					return err
-				}
+				// err = tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
+				// if err != nil {
+				// 	lgr.Error("Error clearing annotations for service (ipv6)", err)
+				// 	return err
+				// }
 				if err := AAAARecordTest(ctx, in); err != nil {
 					fmt.Println()
 					fmt.Println("######################### BAD AAAA public ######################### ")
@@ -72,8 +72,8 @@ func basicSuite(in infra.Provisioned) []test {
 					//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
 					return err
 				}
-				//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
-				//tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
+				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
+				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
 				return nil
 			},
 		},
@@ -98,13 +98,20 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	}
 
 	//checking to see if A record was created in Azure DNS
-	err = validateRecord(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, publicZone, 50, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
+	time.Sleep(20 * time.Second)
+	err = validateRecord(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, publicZone, 20, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
 		lgr.Info("finished successfully")
 	}
 
+	//test passed, deleting record
+	err = tests.DeleteRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, publicZone, armdns.RecordTypeA)
+	if err != nil {
+		lgr.Error("Error deleting A record set")
+		return fmt.Errorf("error deleting A record set")
+	}
 	return nil
 }
 
@@ -149,6 +156,12 @@ var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 		lgr.Info("finished successfully")
 	}
 
+	//TODO: add delete record set for A and AAAA
+	err = tests.DeleteRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, publicZone, armdns.RecordTypeAAAA)
+	if err != nil {
+		lgr.Error("Error deleting AAAA record set")
+		return fmt.Errorf("error deleting AAAA record set")
+	}
 	return nil
 
 }

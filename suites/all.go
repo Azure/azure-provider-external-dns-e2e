@@ -24,7 +24,7 @@ func All(infra infra.Provisioned) []tests.Ts {
 	t1 = append(t1, basicSuite(infra)...)
 	t2 = append(t2, privateDnsSuite(infra)...)
 
-	ret0 := make(tests.Ts, 1)
+	ret0 := make(tests.Ts, 2)
 	ret1 := make(tests.Ts, 2)
 	for i, t := range t1 {
 		fmt.Println("appending test: ", t.GetName())
@@ -38,7 +38,7 @@ func All(infra infra.Provisioned) []tests.Ts {
 
 	final := make([]tests.Ts, 2)
 	final[0] = ret0
-	//final[1] = ret1
+	final[1] = ret1
 
 	return final
 }

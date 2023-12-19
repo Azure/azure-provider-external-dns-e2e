@@ -20,6 +20,8 @@ var (
 	ClusterName *string
 	Ipv4Service *corev1.Service
 	Ipv6Service *corev1.Service
+	PublicZone  string
+	PrivateZone string
 )
 
 func init() {
@@ -55,6 +57,14 @@ func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 	}
 	Ipv6Service = ipv6Svc
 
+	for _, zone := range infra.Zones {
+		PublicZone = zone.GetName()
+	}
+
+	for _, zone := range infra.PrivateZones {
+		PrivateZone = zone.GetName()
+	}
+
 	return nil
 }
 
@@ -74,16 +84,6 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 
 		lgr.Info("finished running test")
 		return nil
-	}
-
-	//TODO: Make these available to basic.go
-	publicZones := make([]string, len(infra.Zones))
-	for i, zone := range infra.Zones {
-		publicZones[i] = zone.GetId()
-	}
-	privateZones := make([]string, len(infra.PrivateZones))
-	for i, zone := range infra.PrivateZones {
-		privateZones[i] = zone.GetId()
 	}
 
 	//Loop to run ALL Tests

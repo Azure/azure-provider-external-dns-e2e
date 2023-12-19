@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	appsv1 "k8s.io/api/apps/v1"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
@@ -206,21 +207,25 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	emptyResp := &armcontainerservice.CommandResultProperties{}
 	cred, err := clients.GetAzCred()
 	if err != nil {
+		fmt.Println("Failed here #1")
 		return *emptyResp, fmt.Errorf("getting az credentials: %w", err)
 	}
 
 	client, err := armcontainerservice.NewManagedClustersClient(subId, cred, nil)
 	if err != nil {
+		fmt.Println("Failed here #2")
 		return *emptyResp, fmt.Errorf("creating aks client: %w", err)
 	}
 
 	poller, err := client.BeginRunCommand(ctx, rg, clusterName, request, nil)
 	if err != nil {
+		fmt.Println("Failed here #3")
 		return *emptyResp, fmt.Errorf("starting run command: %w", err)
 	}
 
 	result, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
+		fmt.Println("Failed here #4")
 		return *emptyResp, fmt.Errorf("running command: %w", err)
 	}
 
@@ -246,6 +251,7 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	}
 
 	if *result.Properties.ExitCode != 0 {
+		fmt.Println("Failed here #5")
 		lgr.Info(fmt.Sprintf("command failed with exit code %d", *result.Properties.ExitCode))
 		return *result.Properties, nonZeroExitCode
 	}
@@ -254,31 +260,25 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 }
 
 // TODO: function to delete A and AAAA records directly from each zone to make sure test command is generating new records each time
-//func deleteARecordSet(rg, zoneName string, recordType) error{
-//
-// name: @.publiczone7d146e5d9158408d90a35c0ff27e21b8.com
-//recordSetName = "@." + zoneName
-// 			cmd := fmt.Sprintf("az network dns record-set a delete -g %s -n MyRecordSet -z www.mysite.com", rg, recordSetName, zoneName)
+func DeleteRecordSet(ctx context.Context, clusterName, subId, rg, zoneName string, recordType armdns.RecordType) error {
+	lgr := logger.FromContext(ctx)
 
-// 			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-// 				Command: to.Ptr(cmd),
-// 			}, runCommandOpts{}); err != nil {
-// 				return fmt.Errorf("running kubectl apply: %w", err)
-// 			}
+	cred, err := clients.GetAzCred()
+	if err != nil {
+		lgr.Error("Error getting azure credentials")
+		return err
+	}
 
-//return fmt.Errorf("Error removing record set: ", recordType)
-//}
+	clientFactory, err := armdns.NewClientFactory(subId, cred, nil)
+	if err != nil {
+		lgr.Error("failed to create client: %v", err)
+		return err
+	}
+	_, err = clientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, "@", armdns.RecordTypeA, &armdns.RecordSetsClientDeleteOptions{IfMatch: nil})
+	if err != nil {
+		lgr.Error("failed to delete record set: %v", err)
+		return err
+	}
 
-//func deleteAAAARecordSet(rg, zoneName string, recordType) error{
-//
-//recordSetName = "@." + zoneName
-// 			cmd := fmt.Sprintf("az network dns record-set aaaa delete -g %s -z %s -n %s", rg, zoneName, recordSetName)
-
-// 			if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-// 				Command: to.Ptr(cmd),
-// 			}, runCommandOpts{}); err != nil {
-// 				return fmt.Errorf("running kubectl apply: %w", err)
-// 			}
-
-//return fmt.Errorf("Error removing record set: ", recordType)
-//}
+	return nil
+}

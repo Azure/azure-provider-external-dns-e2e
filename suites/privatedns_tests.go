@@ -21,21 +21,6 @@ func privateDnsSuite(in infra.Provisioned) []test {
 	log.Printf("In private dns suite <<<<<<<<<<<<<<<<<<<<<<<<<<<")
 	return []test{
 		{
-			name: "public cluster + private DNS +  AAAA Record",
-			run: func(ctx context.Context) error {
-				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-				fmt.Println("Test private DNS + AAAA record")
-				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
-				if err := PrivateAAAATest(ctx, in, false); err != nil {
-					fmt.Println("BAD AAAA private ======================= ")
-					return err
-				}
-
-				return nil
-			},
-		},
-		{
 			name: "public cluster + private DNS +  A Record",
 			run: func(ctx context.Context) error {
 				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
@@ -44,6 +29,21 @@ func privateDnsSuite(in infra.Provisioned) []test {
 
 				if err := PrivateARecordTest(ctx, in, false); err != nil {
 					fmt.Println("BAD A  private ======================= ")
+					return err
+				}
+
+				return nil
+			},
+		},
+		{
+			name: "public cluster + private DNS +  AAAA Record",
+			run: func(ctx context.Context) error {
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+				fmt.Println("Test private DNS + AAAA record")
+				fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
+				if err := PrivateAAAATest(ctx, in, false); err != nil {
+					fmt.Println("BAD AAAA private ======================= ")
 					return err
 				}
 
@@ -59,41 +59,38 @@ var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned, usePubl
 
 	resourceGroup := infra.ResourceGroup.GetName()
 	subId := infra.SubscriptionId
-	publicZone := infra.Zones[0]
-	privateZone := infra.PrivateZones[0]
+
+	privateZone := infra.PrivateZones[0].GetName()
 	ipv6ServiceName := infra.Ipv6ServiceName
 
-	var zoneName string
-	if usePublicZone {
-		zoneName = publicZone.GetName()
-	} else {
-		zoneName = privateZone.GetName()
-		tests.PrivateDnsAnnotations(ctx, subId, *tests.ClusterName, resourceGroup, ipv6ServiceName)
-	}
+	tests.PrivateDnsAnnotations(ctx, subId, *tests.ClusterName, resourceGroup, ipv6ServiceName)
 
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv6ServiceName)
+	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", privateZone, ipv6ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
 	}
 	fmt.Println("before time.sleep in private AAAA record test")
-	time.Sleep(100 * time.Second)
+
 	//Validating records
-	if usePublicZone {
-		err = validateRecord2(ctx, armdns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, zoneName, 20, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
-		if err != nil {
-			return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeAAAA)
-		} else {
-			lgr.Info("finished successfully")
-		}
+	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, privateZone, 20, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
+	if err != nil {
+		return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeAAAA)
 	} else {
-		err = validatePrivateRecords2(ctx, armprivatedns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
-		if err != nil {
-			return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeAAAA)
-		} else {
-			lgr.Info("finished successfully")
-		}
+		lgr.Info("finished successfully")
 	}
+
+	//deleting A and AAAA record sets
+	// err = tests.DeleteRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, privateZone, "", armprivatedns.RecordTypeA)
+	// if err != nil {
+	// 	lgr.Error("Error deleting AAAA record set")
+	// 	return fmt.Errorf("error deleting AAAA record set")
+	// }
+	// err = tests.DeleteRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, privateZone, "", armprivatedns.RecordTypeAAAA)
+	// if err != nil {
+	// 	lgr.Error("Error deleting AAAA record set")
+	// 	return fmt.Errorf("error deleting AAAA record set")
+	// }
 
 	return nil
 
@@ -106,54 +103,43 @@ var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, useP
 	//Currently only provisioning one public and one private zone, no test in this suite tests with more than one of each
 	resourceGroup := infra.ResourceGroup.GetName()
 	subId := infra.SubscriptionId
-	publicZone := infra.Zones[0]
-	privateZone := infra.PrivateZones[0]
+	privateZone := infra.PrivateZones[0].GetName()
 	ipv4ServiceName := infra.Ipv4ServiceName
 
-	var zoneName string
-	if usePublicZone {
-		zoneName = publicZone.GetName()
-	} else {
-		zoneName = privateZone.GetName()
-		tests.PrivateDnsAnnotations(ctx, subId, *tests.ClusterName, resourceGroup, ipv4ServiceName)
-	}
-
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, infra.Ipv4ServiceName)
+	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", privateZone, infra.Ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
-	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", zoneName, ipv4ServiceName)
+	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", privateZone, ipv4ServiceName)
 	if err != nil {
 		lgr.Error("Error annotating service with zone name", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
 	fmt.Println("before time.sleep in private A record test")
-	time.Sleep(100 * time.Second)
-	//Validating Records
-	if usePublicZone {
-		err = validateRecord2(ctx, armdns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
-		if err != nil {
-			return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
-		} else {
-			lgr.Info("finished successfully")
-		}
 
+	//Validating Records
+	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, privateZone, 20, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
+	if err != nil {
+		return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
-		err = validatePrivateRecords2(ctx, armprivatedns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, zoneName, 4, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
-		if err != nil {
-			return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeA)
-		} else {
-			lgr.Info("finished successfully")
-		}
+		lgr.Info("finished successfully")
 	}
+
 	fmt.Println("End of A Record Test ============ ")
+
+	// err = tests.DeleteRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, privateZone, "", armprivatedns.RecordTypeA)
+	// if err != nil {
+	// 	lgr.Error("Error deleting AAAA record set")
+	// 	return fmt.Errorf("error deleting AAAA record set")
+	// }
+
 	return nil
 }
 
-func validatePrivateRecords2(ctx context.Context, recordType armprivatedns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
+func validatePrivateRecords(ctx context.Context, recordType armprivatedns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
 	fmt.Println()
 	fmt.Println("#0 In PRIVATE DNS validateRecord() function ---------------------")
 
@@ -175,139 +161,62 @@ func validatePrivateRecords2(ctx context.Context, recordType armprivatedns.Recor
 		log.Fatal(err)
 	}
 
-	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, serviceDnsZoneName, recordType, &armprivatedns.RecordSetsClientListByTypeOptions{Top: nil,
-		Recordsetnamesuffix: nil,
-	})
-
 	timeout := time.Now().Add(numSeconds * time.Second)
-
+	var pageValue []*armprivatedns.RecordSet
 	for {
 		if time.Now().After(timeout) {
 			return fmt.Errorf("record not created within %s seconds", numSeconds)
 		}
-		if pager.More() { //TODO: modify for pager.NextPage()
-			break
+		pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, serviceDnsZoneName, recordType, &armprivatedns.RecordSetsClientListByTypeOptions{Top: nil,
+			Recordsetnamesuffix: nil,
+		})
+
+		if pager.More() {
+			fmt.Println("In pager.More ====== ")
+			page, err := pager.NextPage(ctx)
+			if err != nil {
+				log.Fatalf("failed to advance page: %v", err)
+				return fmt.Errorf("failed to advance page for record sets")
+			}
+			fmt.Println("After page.NextPage(), no error ======== ")
+			if len(page.Value) > 0 {
+				pageValue = page.Value
+				break
+			}
+
 		}
 	}
 
 	var ipAddr string
 
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
+	for _, v := range pageValue {
 
 		if err != nil {
 			log.Fatalf("failed to advance page: %v", err)
 			return fmt.Errorf("failed to advance page for record sets")
 		}
 
-		for _, v := range page.Value {
+		currZoneName := strings.Trim(*(v.Properties.Fqdn), ".") //removing trailing '.'
 
-			currZoneName := strings.Trim(*(v.Properties.Fqdn), ".") //removing trailing '.'
+		if recordType == armprivatedns.RecordTypeA {
+			ipAddr = *(v.Properties.ARecords[0].IPv4Address)
+		} else if recordType == armprivatedns.RecordTypeAAAA {
+			ipAddr = *(v.Properties.AaaaRecords[0].IPv6Address)
+		} else {
+			return fmt.Errorf("unable to match record type")
+		}
 
-			if recordType == armprivatedns.RecordTypeA {
-				ipAddr = *(v.Properties.ARecords[0].IPv4Address)
-			} else if recordType == armprivatedns.RecordTypeAAAA {
-				ipAddr = *(v.Properties.AaaaRecords[0].IPv6Address)
-			} else {
-				return fmt.Errorf("unable to match record type")
-			}
+		fmt.Println("#4 =========== Ip address: ", ipAddr)
+		fmt.Println("#5 =========== Zone name: ", currZoneName)
 
-			fmt.Println("#4 =========== Ip address: ", ipAddr)
-			fmt.Println("#5 =========== Zone name: ", currZoneName)
+		if currZoneName == serviceDnsZoneName && ipAddr == svcIp {
+			fmt.Println()
+			fmt.Println(" ======================== Record matched!!! ==================== ")
 
-			if currZoneName == serviceDnsZoneName && ipAddr == svcIp {
-				fmt.Println()
-				fmt.Println(" ======================== Record matched!!! ==================== ")
-
-				return nil
-			}
-
+			return nil
 		}
 
 	}
 
 	return fmt.Errorf("record not created %s", recordType) //test failed
-}
-
-// Checks to see whether record is created in Azure DNS
-func validateRecord2(ctx context.Context, recordType armdns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
-
-	lgr := logger.FromContext(ctx)
-	lgr.Info("Checking that Record was created in Azure DNS")
-
-	err := tests.WaitForExternalDns(ctx, numSeconds, subscriptionId, rg, clusterName)
-	if err != nil {
-		return fmt.Errorf("error waiting for ExternalDNS to start running %w", err)
-	}
-
-	cred, err := clients.GetAzCred()
-	if err != nil {
-		return fmt.Errorf("getting az credentials: %w", err)
-	}
-
-	clientFactory, err := armdns.NewClientFactory(subscriptionId, cred, nil)
-	if err != nil {
-		log.Fatalf("failed to create client: %v", err)
-		return fmt.Errorf("failed to create armdns.ClientFactory")
-	}
-
-	pager := clientFactory.NewRecordSetsClient().NewListByTypePager(rg, serviceDnsZoneName, recordType, &armdns.RecordSetsClientListByTypeOptions{Top: nil,
-		Recordsetnamesuffix: nil,
-	})
-
-	timeout := time.Now().Add(numSeconds * time.Second)
-
-	for {
-		if time.Now().After(timeout) {
-			return fmt.Errorf("record not created within %s seconds", numSeconds)
-		}
-		if pager.More() { //TODO: modify for pager.NextPage()
-			break
-		}
-	}
-
-	var ipAddr string
-	fmt.Println("Service ip: ", svcIp)
-	fmt.Println("Service zone name:", serviceDnsZoneName)
-	for pager.More() {
-		fmt.Println("#3 In pager ----------------")
-		page, err := pager.NextPage(ctx)
-
-		if err != nil {
-			log.Fatalf("failed to advance page: %v", err)
-			return fmt.Errorf("failed to advance page for record sets")
-		}
-		fmt.Println("Page.value length: ", len(page.Value))
-		for _, v := range page.Value {
-			fmt.Println()
-			fmt.Println("In Loop!  dns record created ======================= :)")
-			fmt.Println()
-
-			currZoneName := strings.Trim(*(v.Properties.Fqdn), ".") //removing trailing '.'
-
-			if recordType == armdns.RecordTypeA {
-				ipAddr = *(v.Properties.ARecords[0].IPv4Address)
-			} else if recordType == armdns.RecordTypeAAAA {
-				ipAddr = *(v.Properties.AaaaRecords[0].IPv6Address)
-			} else {
-				return fmt.Errorf("unable to match record type")
-			}
-
-			// TODO: change for ipv6 addr
-			fmt.Println("#4 =========== Ip address: ", ipAddr)
-			fmt.Println("#5 =========== Zone name: ", currZoneName)
-
-			if currZoneName == serviceDnsZoneName && ipAddr == svcIp {
-				fmt.Println()
-				fmt.Println(" ======================== Record matched!!! ==================== ")
-
-				return nil
-			}
-
-		}
-
-	}
-	//test failed
-	return fmt.Errorf("record not created %s", recordType)
-
 }
