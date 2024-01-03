@@ -17,11 +17,13 @@ import (
 
 // global exported vars used by tests
 var (
-	ClusterName *string
-	Ipv4Service *corev1.Service
-	Ipv6Service *corev1.Service
-	PublicZone  string
-	PrivateZone string
+	ClusterName   *string
+	Ipv4Service   *corev1.Service
+	Ipv6Service   *corev1.Service
+	PublicZone    string
+	PrivateZone   string
+	ResourceGroup string
+	SubId         string
 )
 
 func init() {
@@ -29,8 +31,7 @@ func init() {
 
 }
 
-//func getObjects for testing
-
+// Sets variables used by all tests
 func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Setting objects for testing")
@@ -65,6 +66,9 @@ func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 		PrivateZone = zone.GetName()
 	}
 
+	ResourceGroup = infra.ResourceGroup.GetName()
+	SubId = infra.SubscriptionId
+
 	return nil
 }
 
@@ -88,8 +92,6 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 	//Loop to run ALL Tests
 	lgr.Info("starting to run tests")
 
-	//var eg errgroup.Group
-
 	for _, t := range allTests {
 		func(t test) error {
 			if err := runTestFn(t, ctx); err != nil {
@@ -98,8 +100,6 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 			return nil
 		}(t)
 	}
-
-	lgr.Info("successfully finished running tests")
 	return nil
 }
 

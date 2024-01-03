@@ -15,11 +15,7 @@ import (
 )
 
 const (
-	// lenZones is the number of zones to provision
-	lenZones = 1
-	// lenPrivateZones is the number of private zones to provision
-	lenPrivateZones = 1
-	linkName        = "sample-link-name"
+	linkName = "sample-link-name"
 )
 
 func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) (Provisioned, *logger.LoggedError) {
@@ -34,7 +30,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	}
 
 	var err error
-	ret.ResourceGroup, err = clients.NewResourceGroup(ctx, subscriptionId, i.ResourceGroup, i.Location, clients.DeleteAfterOpt(2*time.Hour))
+	ret.ResourceGroup, err = clients.NewResourceGroup(ctx, subscriptionId, i.ResourceGroup, i.Location, clients.DeleteAfterOpt(4*time.Hour))
 
 	if err != nil {
 		return Provisioned{}, logger.Error(lgr, fmt.Errorf("creating resource group %s: %w", i.ResourceGroup, err))
@@ -46,30 +42,23 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	var subnetId string
 	var vnetId string
 
-	for idx := 0; idx < lenZones; idx++ {
-		func(idx int) {
-			resEg.Go(func() error {
-				zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, publicZoneName)
-				if err != nil {
-					return logger.Error(lgr, fmt.Errorf("creating zone: %w", err))
-				}
-				ret.Zones = append(ret.Zones, zone)
-				return nil
-			})
-		}(idx)
-	}
-	for idx := 0; idx < lenPrivateZones; idx++ {
-		func(idx int) {
-			resEg.Go(func() error {
-				privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, privateZoneName)
-				if err != nil {
-					return logger.Error(lgr, fmt.Errorf("creating private zone: %w", err))
-				}
-				ret.PrivateZones = append(ret.PrivateZones, privateZone)
-				return nil
-			})
-		}(idx)
-	}
+	resEg.Go(func() error {
+		zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, publicZoneName)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating zone: %w", err))
+		}
+		ret.Zones = append(ret.Zones, zone)
+		return nil
+	})
+
+	resEg.Go(func() error {
+		privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, privateZoneName)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating private zone: %w", err))
+		}
+		ret.PrivateZones = append(ret.PrivateZones, privateZone)
+		return nil
+	})
 
 	if err := resEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
@@ -252,28 +241,11 @@ func deployExternalDNS(ctx context.Context, p Provisioned) error {
 	lgr.Info("deploying external DNS onto cluster")
 	defer lgr.Info("finished deploying ext DNS")
 
-	var publicZoneNames []string
-	zones := p.Zones
-	i := 0
-	for i < lenZones {
-		publicZoneNames = append(publicZoneNames, zones[i].GetName())
-		i++
-	}
+	publicZoneName := p.Zones[0].GetName()
+	privateZoneName := p.PrivateZones[0].GetName()
 
-	var privateZoneNames []string
-	privateZones := p.PrivateZones
-	i = 0
-	for i < lenZones {
-		privateZoneNames = append(privateZoneNames, privateZones[i].GetName())
-		i++
-	}
-
-	if len(publicZoneNames) == 0 || len(privateZoneNames) == 0 {
-		return fmt.Errorf("public and/or private zones were not created/provided")
-	}
-
-	publicDnsConfig := manifests.GetPublicDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), publicZoneNames)
-	privateDnsConfig := manifests.GetPrivateDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), privateZoneNames)
+	publicDnsConfig := manifests.GetPublicDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), publicZoneName)
+	privateDnsConfig := manifests.GetPrivateDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), privateZoneName)
 
 	exConfig := manifests.SetExampleConfig(p.Cluster.GetClientId(), p.Cluster.GetId(), publicDnsConfig, privateDnsConfig)
 	currentConfig := exConfig[0] //currently only using one config from external_dns_config.go

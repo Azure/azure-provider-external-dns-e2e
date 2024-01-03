@@ -6,9 +6,8 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 )
 
-// TODO: change rg prefix once tests are done - not urgent
 var (
-	rg              = "sample3-routing-e2e" + uuid.New().String()
+	rg              = "externalDns-e2e" + uuid.New().String()
 	location        = "westus"
 	publicZoneName  = "public-zone-" + uuid.NewString()
 	privateZoneName = "private-zone-" + uuid.NewString()
@@ -41,6 +40,5 @@ func (i infras) FilterNames(names []string) infras {
 			}
 		}
 	}
-
 	return ret
 }

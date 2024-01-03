@@ -9,7 +9,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v2"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 )
 
 var (
@@ -18,17 +17,10 @@ var (
 	location           string
 	virtualNetworkName = "sample-virtual-network"
 	subnetName         = "sample-subnet"
-	linkName           = "sample-vnet-link"
-)
 
-var (
-	networkClientFactory    *armnetwork.ClientFactory
-	privatednsClientFactory *armprivatedns.ClientFactory
-)
-
-var (
 	virtualNetworksClient *armnetwork.VirtualNetworksClient
 	subnetsClient         *armnetwork.SubnetsClient
+	networkClientFactory  *armnetwork.ClientFactory
 )
 
 func NewVnet(ctx context.Context, subId, rg, region, privateZoneName string) (string, string, error) {
@@ -42,10 +34,6 @@ func NewVnet(ctx context.Context, subId, rg, region, privateZoneName string) (st
 	}
 
 	networkClientFactory, err = armnetwork.NewClientFactory(subscriptionID, cred, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	privatednsClientFactory, err = armprivatedns.NewClientFactory(subscriptionID, cred, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

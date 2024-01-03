@@ -38,34 +38,35 @@ type runCommandOpts struct {
 	outputFile string
 }
 
-// Annotates Service with given key, value pair
-func AnnotateService(ctx context.Context, subId, clusterName, rg, key, value, serviceName string) error {
-
+func AnnotateService(ctx context.Context, subId, clusterName, rg, serviceName string, annMap map[string]string) error {
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to Annotate service")
 	defer lgr.Info("finished annotating service")
 
-	//TODO: namespace parameter
-	cmd := fmt.Sprintf("kubectl annotate service --overwrite %s %s=%s -n kube-system", serviceName, key, value)
+	for key, value := range annMap {
+		cmd := fmt.Sprintf("kubectl annotate service --overwrite %s %s=%s -n kube-system", serviceName, key, value)
 
-	if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-		Command: to.Ptr(cmd),
-	}, runCommandOpts{}); err != nil {
-		return fmt.Errorf("running kubectl apply: %w", err)
+		if _, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
+			Command: to.Ptr(cmd),
+		}, runCommandOpts{}); err != nil {
+			return fmt.Errorf("running kubectl apply: %w", err)
+		}
 	}
 
-	// //TODO: This check takes extra time, slows down tests. Do we actually need to check if annotation was saved? kubectl apply will fail if it doesn't anyways, right?
+	//TODO: uncomment later?
 	// serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
 	// if err != nil {
 	// 	return fmt.Errorf("error getting service object after annotating")
 	// }
 
 	// //check that annotation was saved
-	// if serviceObj.Annotations[key] == value {
-	// 	return nil
-	// } else {
-	// 	return fmt.Errorf("service annotation was not saved")
+	// savedAnnotations := serviceObj.Annotations
+	// for key, value := range annMap {
+	// 	val, exists := savedAnnotations[key]
+	// 	if !exists || val != value {
+	// 		return fmt.Errorf("service annotation was not saved")
+	// 	}
 	// }
 
 	return nil
@@ -98,7 +99,6 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 		}
 	}
 
-	//TODO: namespace parameter
 	serviceObj, err = getServiceObj(ctx, subId, rg, clusterName, serviceName)
 	if err != nil {
 		return fmt.Errorf("error getting service object after annotating")
@@ -114,23 +114,22 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 
 }
 
-// TODO: param: add suport for PrivateProvider, which has a different ext dns deployment name. ADD PARAM instead of hardcoded "external-dns"
 // Checks to see that external dns pod is running
-func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName string) error {
+func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName, provider string) error {
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("Checking/ Waiting for external dns pod to run")
 	defer lgr.Info("Done waiting for external dns pod")
 
+	cmd := fmt.Sprintf("kubectl get deploy %s -n kube-system -o json", provider)
 	resultProperties, err := RunCommand(ctx, subId, rg, clusterName, armcontainerservice.RunCommandRequest{
-		Command: to.Ptr("kubectl get deploy external-dns -n kube-system -o json"), //TODO: provider as a param
+		Command: to.Ptr(cmd),
 	}, runCommandOpts{})
 
 	if err != nil {
-		return fmt.Errorf("unable to get pod for external-dns deployment")
+		return fmt.Errorf("unable to get pod for %s deployment", provider)
 	}
 
-	//CHECK HERE
 	responseLog := *resultProperties.Logs
 	deploy := &appsv1.Deployment{}
 	err = json.Unmarshal([]byte(responseLog), deploy)
@@ -144,7 +143,7 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 		var i int = 0
 		for deploy.Status.AvailableReplicas < 1 {
 			lgr.Info("======= ExternalDNS not available, checking again in %s seconds ====", timeout)
-			time.Sleep(timeout)
+			time.Sleep(timeout) //TODO: check this logic
 			i++
 
 			if i >= 5 {
@@ -163,20 +162,18 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 }
 
 // Adds annotations needed specifically for private dns tests
-// TODO: change annotate service to take a map of kep value pairs instead of adding one annotatoin at a time
 func PrivateDnsAnnotations(ctx context.Context, subId, clusterName, rg, serviceName string) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Adding annotations for private dns")
 
-	err := AnnotateService(ctx, subId, clusterName, rg, "service.beta.kubernetes.io/azure-load-balancer-internal", "true", serviceName)
+	annotationMap := map[string]string{
+		"external-dns.alpha.kubernetes.io/hostname":               PrivateZone,
+		"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+		"external-dns.alpha.kubernetes.io/internal-hostname":      "server-clusterip.example.com",
+	}
+	err := AnnotateService(ctx, subId, clusterName, rg, serviceName, annotationMap)
 	if err != nil {
 		lgr.Error("Error annotating service to create internal load balancer ", err)
-		return fmt.Errorf("error: %s", err)
-	}
-
-	err = AnnotateService(ctx, subId, clusterName, rg, "external-dns.alpha.kubernetes.io/internal-hostname", "server-clusterip.example.com", serviceName)
-	if err != nil {
-		lgr.Error("Error annotating service for private dns", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
@@ -241,10 +238,13 @@ func RunCommand(ctx context.Context, subId, rg, clusterName string, request armc
 	return *result.Properties, nil
 }
 
-// TODO: function to delete A and AAAA records directly from each zone to make sure test command is generating new records each time
-// Deletes record sets created in Azure DNS, needed for all tests to run properly
-func DeleteRecordSet(ctx context.Context, clusterName, subId, rg, zoneName string, recordType armdns.RecordType) error {
+// Deletes a record set in a public dns zone or private dns zone in Azure DNS
+// Called after each test to allow subsequent test to run properly
+func DeleteRecordSet(ctx context.Context, clusterName, subId, rg, zoneName string, recordType armdns.RecordType, privateRecordType armprivatedns.RecordType) error {
 	lgr := logger.FromContext(ctx)
+
+	lgr.Info("Starting to delete record set")
+	defer lgr.Info("finished deleting record set")
 
 	cred, err := clients.GetAzCred()
 	if err != nil {
@@ -252,40 +252,29 @@ func DeleteRecordSet(ctx context.Context, clusterName, subId, rg, zoneName strin
 		return err
 	}
 
-	clientFactory, err := armdns.NewClientFactory(subId, cred, nil)
-	if err != nil {
-		lgr.Error("failed to create client: %v", err)
-		return err
-	}
-	_, err = clientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, "@", recordType, &armdns.RecordSetsClientDeleteOptions{IfMatch: nil})
-	if err != nil {
-		lgr.Error("failed to delete record set: %v", err)
-		return err
-	}
+	if recordType != "" {
+		clientFactory, err := armdns.NewClientFactory(subId, cred, nil)
+		if err != nil {
+			lgr.Error("failed to create client ", err)
+			return err
+		}
+		_, err = clientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, "@", recordType, &armdns.RecordSetsClientDeleteOptions{IfMatch: nil})
+		if err != nil {
+			lgr.Error("failed to delete record set in public dns zone ", err)
+			return err
+		}
+	} else { //delete a private record set
+		privateClientFactory, err := armprivatedns.NewClientFactory(subId, cred, nil)
+		if err != nil {
+			lgr.Error("failed to create client", err)
+			return err
+		}
+		_, err = privateClientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, privateRecordType, "@", &armprivatedns.RecordSetsClientDeleteOptions{IfMatch: nil})
+		if err != nil {
+			lgr.Error("failed to delete record set in private dns zone ", err)
+			return err
+		}
 
-	return nil
-}
-
-// TODO: function to delete A and AAAA records directly from each zone to make sure test command is generating new records each time
-func DeletePrivateRecordSet(ctx context.Context, clusterName, subId, rg, zoneName string, recordType armprivatedns.RecordType) error {
-	lgr := logger.FromContext(ctx)
-
-	cred, err := clients.GetAzCred()
-	if err != nil {
-		lgr.Error("Error getting azure credentials")
-		return err
 	}
-
-	clientFactory, err := armprivatedns.NewClientFactory(subId, cred, nil)
-	if err != nil {
-		lgr.Error("failed to create client: %v", err)
-		return err
-	}
-	_, err = clientFactory.NewRecordSetsClient().Delete(ctx, rg, zoneName, recordType, "@", &armprivatedns.RecordSetsClientDeleteOptions{IfMatch: nil})
-	if err != nil {
-		lgr.Error("failed to delete record set: %v", err)
-		return err
-	}
-
 	return nil
 }

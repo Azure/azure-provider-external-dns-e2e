@@ -52,8 +52,7 @@ var testCmd = &cobra.Command{
 			return fmt.Errorf("expected 1 provisioned infrastructure, got %d", len(provisioned))
 		}
 
-		//Should run public and private suites one at a time.
-
+		//Should run public and private dns suites one at a time.
 		tests.SetObjectsForTesting(ctx, provisioned[0])
 		tests := suites.All(provisioned[0])
 

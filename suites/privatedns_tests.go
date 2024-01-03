@@ -16,35 +16,32 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 )
 
+// Tests using the provisioned private dns zone for creating A and AAAA records
 func privateDnsSuite(in infra.Provisioned) []test {
 	return []test{
 		{
-			name: "public cluster + private DNS +  A Record",
+			name: "private DNS +  A Record",
 			run: func(ctx context.Context) error {
 				lgr := logger.FromContext(ctx)
 				if err := PrivateARecordTest(ctx, in, false); err != nil {
-					fmt.Println("PRIVATE DNS A FAILED ==================== ")
 					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 					return err
 				}
-				fmt.Println("PRIVATE DNS A RECORD TEST FINISHED SUCCESSFULLY, CLEARING SERVICE ANNOTATIONS :))))")
-				lgr.Info("\n ======== Private ipv4 test finished successfully, clearing service annotations ======== \n")
+				lgr.Info("\n ======== Private Dns ipv4 test finished successfully, clearing service annotations ======== \n")
 				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 				return nil
 			},
 		},
 		{
-			name: "public cluster + private DNS +  AAAA Record",
+			name: "private DNS +  AAAA Record",
 			run: func(ctx context.Context) error {
 				lgr := logger.FromContext(ctx)
 				if err := PrivateAAAATest(ctx, in, false); err != nil {
-					fmt.Println("PRIVATE DNS Aaaa FAILED ==================== ")
 					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
 					return err
 				}
-				fmt.Println("PRIVATE DNS + Aaaa RECORD TEST FINISHED SUCCESSFULLY, CLEARING SERVICE ANNOTATIONS :))))")
-				lgr.Info("\n ======== Private ipv6 test finished successfully, clearing service annotations ======== \n ")
+				lgr.Info("\n ======== Private Dns ipv6 test finished successfully, clearing service annotations ======== \n ")
 				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 				tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
 				return nil
@@ -57,34 +54,23 @@ var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, useP
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
-	//Currently only provisioning one public and one private zone, no test in this suite tests with more than one of each
-	resourceGroup := infra.ResourceGroup.GetName()
-	subId := infra.SubscriptionId
-	privateZone := infra.PrivateZones[0].GetName()
 	ipv4ServiceName := infra.Ipv4ServiceName
 
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", privateZone, infra.Ipv4ServiceName)
+	err := tests.PrivateDnsAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, ipv4ServiceName)
 	if err != nil {
-		lgr.Error("Error annotating service", err)
+		lgr.Error("Error annotating service with private dns annotations", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
-	err = tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", privateZone, ipv4ServiceName)
-	if err != nil {
-		lgr.Error("Error annotating service with zone name", err)
-		return fmt.Errorf("error: %s", err)
-	}
-
-	time.Sleep(20 * time.Second)
 	//Validating Records
-	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeA, resourceGroup, subId, *tests.ClusterName, privateZone, 20, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
+	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeA, tests.ResourceGroup, tests.SubId, *tests.ClusterName, tests.PrivateZone, 150, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
-		lgr.Info("Finished test: private dns + A record test successfully")
+		lgr.Info("Test Passed: Private Dns + A record test successfully")
 	}
 
-	err = tests.DeletePrivateRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, privateZone, armprivatedns.RecordTypeA)
+	err = tests.DeleteRecordSet(ctx, *tests.ClusterName, tests.SubId, tests.ResourceGroup, tests.PrivateZone, "", armprivatedns.RecordTypeA)
 	if err != nil {
 		lgr.Error("Error deleting AAAA record set")
 		return fmt.Errorf("error deleting AAAA record set")
@@ -97,37 +83,25 @@ var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned, usePubl
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
-	resourceGroup := infra.ResourceGroup.GetName()
-	subId := infra.SubscriptionId
-
-	privateZone := infra.PrivateZones[0].GetName()
 	ipv6ServiceName := infra.Ipv6ServiceName
 
-	//TODO: send all of these annotations to Annotate service in a map
-	tests.PrivateDnsAnnotations(ctx, subId, *tests.ClusterName, resourceGroup, ipv6ServiceName)
-
-	err := tests.AnnotateService(ctx, subId, *tests.ClusterName, resourceGroup, "external-dns.alpha.kubernetes.io/hostname", privateZone, ipv6ServiceName)
+	err := tests.PrivateDnsAnnotations(ctx, tests.SubId, *tests.ClusterName, tests.ResourceGroup, ipv6ServiceName)
 	if err != nil {
-		lgr.Error("Error annotating service", err)
+		lgr.Error("Error annotating service with private dns annotations", err)
 		return fmt.Errorf("error: %s", err)
 	}
 
-	time.Sleep(20 * time.Second)
+	time.Sleep(100 * time.Second)
 	//Validating records
-	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeAAAA, resourceGroup, subId, *tests.ClusterName, privateZone, 20, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
+	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeAAAA, tests.ResourceGroup, tests.SubId, *tests.ClusterName, tests.PrivateZone, 80, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeAAAA)
 	} else {
-		lgr.Info("Finished test: private dns + AAAA record test successfully")
+		lgr.Info("Test Passed: Private Dns + AAAA record test successfully")
 	}
 
-	//deleting A and AAAA record sets
-	err = tests.DeletePrivateRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, privateZone, armprivatedns.RecordTypeA)
-	if err != nil {
-		lgr.Error("Error deleting A record set")
-		return fmt.Errorf("error deleting A record set")
-	}
-	err = tests.DeletePrivateRecordSet(ctx, *tests.ClusterName, subId, resourceGroup, privateZone, armprivatedns.RecordTypeAAAA)
+	//Deleting A and AAAA record sets
+	err = tests.DeleteRecordSet(ctx, *tests.ClusterName, tests.SubId, tests.ResourceGroup, tests.PrivateZone, "", armprivatedns.RecordTypeAAAA)
 	if err != nil {
 		lgr.Error("Error deleting AAAA record set")
 		return fmt.Errorf("error deleting AAAA record set")
@@ -141,7 +115,8 @@ func validatePrivateRecords(ctx context.Context, recordType armprivatedns.Record
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
 
-	err := tests.WaitForExternalDns(ctx, 10, subscriptionId, rg, clusterName)
+	//Default 10 seconds to wait for external dns pod to start running, can be modified in the future if needed
+	err := tests.WaitForExternalDns(ctx, 10, subscriptionId, rg, clusterName, "external-dns-private")
 	if err != nil {
 		return fmt.Errorf("error waiting for ExternalDNS to start running %w", err)
 	}
@@ -169,7 +144,7 @@ func validatePrivateRecords(ctx context.Context, recordType armprivatedns.Record
 		if pager.More() {
 			page, err := pager.NextPage(ctx)
 			if err != nil {
-				log.Fatalf("failed to advance page: %v", err)
+				log.Fatal("failed to advance page", err)
 				return fmt.Errorf("failed to advance page for record sets")
 			}
 			if len(page.Value) > 0 {
@@ -178,16 +153,12 @@ func validatePrivateRecords(ctx context.Context, recordType armprivatedns.Record
 			}
 
 		}
+		time.Sleep(2 * time.Second)
 	}
 
 	var ipAddr string
 
 	for _, v := range pageValue {
-
-		if err != nil {
-			log.Fatalf("failed to advance page: %v", err)
-			return fmt.Errorf("failed to advance page for record sets")
-		}
 		currZoneName := strings.Trim(*(v.Properties.Fqdn), ".") //removing trailing '.'
 
 		if recordType == armprivatedns.RecordTypeA {
@@ -199,7 +170,6 @@ func validatePrivateRecords(ctx context.Context, recordType armprivatedns.Record
 		}
 
 		if currZoneName == serviceDnsZoneName && ipAddr == svcIp {
-			lgr.Info(" ======================== Record matched!!! ==================== ")
 			return nil
 		}
 

@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
@@ -18,6 +16,9 @@ import (
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
+	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 )
 
 var (
@@ -191,6 +192,10 @@ func (a *aks) Deploy(ctx context.Context, objs []client.Object) error {
 	}
 	encoded := base64.StdEncoding.EncodeToString(zip)
 	fi, err := os.Create("./manifests.zip")
+	if err != nil {
+		lgr.Error("Error creating manifests.zip")
+		return err
+	}
 	fi.Write(zip)
 
 	if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{

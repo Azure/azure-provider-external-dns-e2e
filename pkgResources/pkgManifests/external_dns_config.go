@@ -17,17 +17,15 @@ type configStruct struct {
 }
 
 // Sets public dns configuration above with values from provisioned infra
-func GetPublicDnsConfig(tenantId, subId, rg string, publicZones []string) *ExternalDnsConfig {
+func GetPublicDnsConfig(tenantId, subId, rg string, publicZone string) *ExternalDnsConfig {
 
 	publicDnsConfig := &ExternalDnsConfig{}
 	var publicZonePaths []string
 	i := 0
 
-	for i < len(publicZones) {
-		path := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/dnszones/%s", subId, rg, publicZones[i])
-		publicZonePaths = append(publicZonePaths, path)
-		i++
-	}
+	path := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/dnszones/%s", subId, rg, publicZone)
+	publicZonePaths = append(publicZonePaths, path)
+	i++
 
 	publicDnsConfig.TenantId = tenantId
 	publicDnsConfig.Subscription = subId
@@ -40,17 +38,16 @@ func GetPublicDnsConfig(tenantId, subId, rg string, publicZones []string) *Exter
 }
 
 // Sets private dns configuration above with values from provisioned infra
-func GetPrivateDnsConfig(tenantId, subId, rg string, privateZones []string) *ExternalDnsConfig {
+func GetPrivateDnsConfig(tenantId, subId, rg string, privateZone string) *ExternalDnsConfig {
 
 	privateDnsConfig := &ExternalDnsConfig{}
 
 	var privateZonePaths []string
 	i := 0
-	for i < len(privateZones) {
-		path := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privatednszones/%s", subId, rg, privateZones[i])
-		privateZonePaths = append(privateZonePaths, path)
-		i++
-	}
+
+	path := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privatednszones/%s", subId, rg, privateZone)
+	privateZonePaths = append(privateZonePaths, path)
+	i++
 
 	privateDnsConfig.TenantId = tenantId
 	privateDnsConfig.Subscription = subId

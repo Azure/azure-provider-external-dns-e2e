@@ -3,9 +3,10 @@ package infra
 import (
 	"fmt"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/go-autorest/autorest/azure"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 )
 
 // Translate to .json for infra-config.json

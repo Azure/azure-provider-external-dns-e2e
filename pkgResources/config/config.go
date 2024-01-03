@@ -15,7 +15,7 @@ import (
 
 const (
 	// DefaultNs is the default namespace for the resources deployed by this operator
-	DefaultNs              = "app-routing-system"
+	DefaultNs              = "externalDNS"
 	PublicZoneType         = "dnszones"
 	PrivateZoneType        = "privatednszones"
 	defaultDnsSyncInterval = 3 * time.Minute
@@ -39,7 +39,6 @@ func init() {
 	flag.StringVar(&Flags.ServiceAccountTokenPath, "service-account-token-path", "", "optionally override the default token path")
 	flag.StringVar(&Flags.MetricsAddr, "metrics-addr", "0.0.0.0:8081", "address to serve Prometheus metrics on")
 	flag.StringVar(&Flags.ProbeAddr, "probe-addr", "0.0.0.0:8080", "address to serve readiness/liveness probes on")
-	flag.StringVar(&Flags.OperatorDeployment, "operator-deployment", "app-routing-operator", "name of the operator's k8s deployment")
 	flag.StringVar(&Flags.ClusterUid, "cluster-uid", "", "unique identifier of the cluster the add-on belongs to")
 	flag.DurationVar(&Flags.DnsSyncInterval, "dns-sync-interval", defaultDnsSyncInterval, "interval at which to sync DNS records")
 }
@@ -61,7 +60,6 @@ type Config struct {
 	ConcurrencyWatchdogThres            float64
 	ConcurrencyWatchdogVotes            int
 	DisableOSM                          bool
-	OperatorDeployment                  string
 	ClusterUid                          string
 	DnsSyncInterval                     time.Duration
 }

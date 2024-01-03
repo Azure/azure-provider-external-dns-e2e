@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"github.com/Azure/go-autorest/autorest/azure"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 type zone struct {

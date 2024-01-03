@@ -8,34 +8,23 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/tests"
 )
 
-var (
-	suiteCount = 0
-)
-
 // All returns all test in all suites
 func All(infra infra.Provisioned) []tests.Ts {
 
-	//TODO: standardize for any number of suites
-	suiteCount = 2
+	//Add new testing suites here:
+	var allSuites [][]test
+	allSuites = append(allSuites, basicSuite(infra))
+	allSuites = append(allSuites, privateDnsSuite(infra))
 
-	t1 := []test{}
-	t2 := []test{}
-	t1 = append(t1, basicSuite(infra)...)
-	t2 = append(t2, privateDnsSuite(infra)...)
+	final := make([]tests.Ts, len(allSuites))
 
-	ret0 := make(tests.Ts, 2)
-	ret1 := make(tests.Ts, 2)
-	for i, t := range t1 {
-		ret0[i] = t
+	for _, suite := range allSuites {
+		ret := make(tests.Ts, len(suite))
+		for j, w := range suite {
+			ret[j] = w
+		}
+		final = append(final, ret)
 	}
-
-	for i, t := range t2 {
-		ret1[i] = t
-	}
-
-	final := make([]tests.Ts, 2)
-	final[0] = ret0
-	final[1] = ret1
 
 	return final
 }

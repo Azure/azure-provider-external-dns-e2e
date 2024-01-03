@@ -7,7 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// returns manifest for a basic nginx deployment
+// Returns manifest for a basic nginx deployment
 func NewNginxDeployment() *appsv1.Deployment {
 
 	podLabels := make(map[string]string)
@@ -47,7 +47,7 @@ func NewNginxDeployment() *appsv1.Deployment {
 	}
 }
 
-// returns nginx service
+// Returns nginx services with annotations necessary to create ipv4 and ipv6 records
 func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 	ipv4Service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{

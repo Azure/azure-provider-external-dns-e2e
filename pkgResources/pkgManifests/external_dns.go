@@ -7,9 +7,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
-	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/util"
-
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -20,6 +17,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
+	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/util"
 )
 
 const (
@@ -104,7 +104,6 @@ func ExternalDnsResources(conf *config.Config, self *appsv1.Deployment, external
 }
 
 func externalDnsResourcesFromConfig(conf *config.Config, externalDnsConfig *ExternalDnsConfig) []client.Object {
-
 	var objs []client.Object
 	objs = append(objs, newExternalDNSServiceAccount(conf, externalDnsConfig))
 	objs = append(objs, newExternalDNSClusterRole(conf, externalDnsConfig))
@@ -197,7 +196,7 @@ func NewExternalDNSConfigMap(conf *config.Config, externalDnsConfig *ExternalDns
 		"tenantId":                    externalDnsConfig.TenantId,
 		"subscriptionId":              externalDnsConfig.Subscription,
 		"resourceGroup":               externalDnsConfig.ResourceGroup,
-		"userAssignedIdentityID":      conf.MSIClientID, //TODO: remove?
+		"userAssignedIdentityID":      conf.MSIClientID,
 		"useManagedIdentityExtension": true,
 		"cloud":                       conf.Cloud,
 		"location":                    conf.Location,

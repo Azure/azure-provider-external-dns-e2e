@@ -99,12 +99,6 @@ type resourceGroup interface {
 	Identifier
 }
 
-type serviceInfoInterface interface {
-	GetName() string
-	GetIpAddr() string
-	Identifier
-}
-
 type Provisioned struct {
 	Name            string
 	Cluster         cluster
