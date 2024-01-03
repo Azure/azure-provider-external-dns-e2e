@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 )
 
-// comment
 func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 	cluster, err := azure.ParseResourceID(p.Cluster.GetId())
 	if err != nil {

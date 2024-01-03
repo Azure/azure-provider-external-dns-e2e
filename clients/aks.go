@@ -61,21 +61,6 @@ var PrivateClusterOpt = McOpt{
 	},
 }
 
-var OsmClusterOpt = McOpt{
-	Name: "osm cluster",
-	fn: func(mc *armcontainerservice.ManagedCluster) error {
-		if mc.Properties.AddonProfiles == nil {
-			mc.Properties.AddonProfiles = map[string]*armcontainerservice.ManagedClusterAddonProfile{}
-		}
-
-		mc.Properties.AddonProfiles["openServiceMesh"] = &armcontainerservice.ManagedClusterAddonProfile{
-			Enabled: to.Ptr(true),
-		}
-
-		return nil
-	},
-}
-
 func LoadAks(id azure.Resource, dnsServiceIp, location, principalId, clientId string, options map[string]struct{}) *aks {
 	return &aks{
 		name:           id.ResourceName,
