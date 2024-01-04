@@ -59,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: infra
-          path: infra.json
+          path: infrafolder/infra.json
   test:
     needs: provision
     runs-on: ubuntu-latest
