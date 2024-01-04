@@ -39,7 +39,7 @@ var infraCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("generating loadable infrastructure: %w", err)
 		}
-
+		fmt.Println("========== infrafile path being created: ", infraFile)
 		file, err := os.Create(infraFile) // create truncates a file that exists
 		if err != nil {
 			return fmt.Errorf("opening file: %w", err)
