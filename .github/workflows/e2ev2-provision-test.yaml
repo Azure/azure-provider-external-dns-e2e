@@ -87,7 +87,7 @@ jobs:
       - name: Test
         shell: bash
         id: test
-        run: (go run ./main.go test)
+        run: (go run ./main.go test --infra-file="./infra.json")
         if:
           (github.event_name == 'repository_dispatch' &&
           github.event.client_payload.slash_command.args.named.sha != '' &&
