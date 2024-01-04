@@ -1,11 +1,12 @@
 package pkgManifests
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
 	appsv1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
 )
 
 type configStruct struct {
@@ -15,71 +16,60 @@ type configStruct struct {
 	DnsConfigs []*ExternalDnsConfig
 }
 
-var (
-	publicZoneOne = "/subscriptions/test-subscription/resourceGroups/test-rg-private/providers/Microsoft.Network/dnszones/test-one.com"
-	publicZoneTwo = "/subscriptions/test-subscription/resourceGroups/test-rg-private/providers/Microsoft.Network/dnszones/test-two.com"
-	publicZones   = []string{publicZoneOne, publicZoneTwo}
+// Sets public dns configuration above with values from provisioned infra
+func GetPublicDnsConfig(tenantId, subId, rg string, publicZone string) *ExternalDnsConfig {
 
-	privateZoneOne = "/subscriptions/test-subscription/resourceGroups/test-rg-private/providers/Microsoft.Network/privatednszones/test-three.com"
-	privateZoneTwo = "/subscriptions/test-subscription/resourceGroups/test-rg-private/providers/Microsoft.Network/privatednszones/test-four.com"
-	privateZones   = []string{privateZoneOne, privateZoneTwo}
+	publicDnsConfig := &ExternalDnsConfig{}
+	var publicZonePaths []string
+	i := 0
 
-	clusterUid = "test-cluster-uid"
+	path := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/dnszones/%s", subId, rg, publicZone)
+	publicZonePaths = append(publicZonePaths, path)
+	i++
 
-	publicDnsConfig = &ExternalDnsConfig{
-		TenantId:           "test-tenant-id",
-		Subscription:       "test-subscription-id",
-		ResourceGroup:      "test-resource-group-public",
-		DnsZoneResourceIDs: publicZones,
-		Provider:           PublicProvider,
-	}
+	publicDnsConfig.TenantId = tenantId
+	publicDnsConfig.Subscription = subId
+	publicDnsConfig.ResourceGroup = rg
+	publicDnsConfig.DnsZoneResourceIDs = publicZonePaths
+	publicDnsConfig.Provider = PublicProvider
 
-	privateDnsConfig = &ExternalDnsConfig{
-		TenantId:           "test-tenant-id",
-		Subscription:       "test-subscription-id",
-		ResourceGroup:      "test-resource-group-private",
-		DnsZoneResourceIDs: privateZones,
-		Provider:           PrivateProvider,
-	}
+	return publicDnsConfig
 
-	exampleConfigs = []configStruct{
+}
+
+// Sets private dns configuration above with values from provisioned infra
+func GetPrivateDnsConfig(tenantId, subId, rg string, privateZone string) *ExternalDnsConfig {
+
+	privateDnsConfig := &ExternalDnsConfig{}
+
+	var privateZonePaths []string
+	i := 0
+
+	path := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privatednszones/%s", subId, rg, privateZone)
+	privateZonePaths = append(privateZonePaths, path)
+	i++
+
+	privateDnsConfig.TenantId = tenantId
+	privateDnsConfig.Subscription = subId
+	privateDnsConfig.ResourceGroup = rg
+	privateDnsConfig.DnsZoneResourceIDs = privateZonePaths
+	privateDnsConfig.Provider = PrivateProvider
+
+	return privateDnsConfig
+}
+
+// Initializes Example configuration with public and private dns config. Called from Provision.go
+func SetExampleConfig(clientId, clusterUid string, publicDnsConfig, privateDnsConfig *ExternalDnsConfig) []configStruct {
+	//for now, we have one configuration, returning an array of configStructs allows us to rotate between configs if necessary
+	exampleConfigs := []configStruct{
 		{
 			Name:       "full",
-			Conf:       &config.Config{NS: "test-namespace", ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3, Registry: "mcr.microsoft.com"},
+			Conf:       &config.Config{NS: "kube-system", MSIClientID: clientId, ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3, Registry: "mcr.microsoft.com"},
 			Deploy:     nil,
 			DnsConfigs: []*ExternalDnsConfig{publicDnsConfig, privateDnsConfig},
 		},
-		{
-			Name:       "no-ownership",
-			Conf:       &config.Config{NS: "test-namespace", ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3},
-			DnsConfigs: []*ExternalDnsConfig{publicDnsConfig},
-		},
-		{
-			Name: "private",
-			Conf: &config.Config{NS: "test-namespace", ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3},
-			Deploy: &appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test-operator-deploy",
-					UID:  "test-operator-deploy-uid",
-				},
-			},
-			DnsConfigs: []*ExternalDnsConfig{privateDnsConfig},
-		},
-		{
-			Name: "short-sync-interval",
-			Conf: &config.Config{NS: "test-namespace", ClusterUid: clusterUid, DnsSyncInterval: time.Second * 10},
-			Deploy: &appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test-operator-deploy",
-					UID:  "test-operator-deploy-uid",
-				},
-			},
-			DnsConfigs: []*ExternalDnsConfig{publicDnsConfig, privateDnsConfig},
-		},
+		//add other configs here
 	}
-)
-
-func GetExampleConfigs() []configStruct {
 
 	return exampleConfigs
 

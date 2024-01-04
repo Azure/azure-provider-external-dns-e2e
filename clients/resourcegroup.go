@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 type rg struct {
@@ -44,7 +45,7 @@ func NewResourceGroup(ctx context.Context, subscriptionId, name, location string
 	lgr.Info("starting to create resource group")
 	defer lgr.Info("finished creating resource group")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}

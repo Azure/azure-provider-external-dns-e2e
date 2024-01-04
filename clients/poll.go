@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
 )
 
 type errorCh[T any] struct {
@@ -13,6 +14,7 @@ type errorCh[T any] struct {
 	data T
 }
 
+// Used to check if Azure resources have been created
 func pollWithLog[T any](ctx context.Context, p *runtime.Poller[T], msg string) (T, error) {
 	lgr := logger.FromContext(ctx)
 

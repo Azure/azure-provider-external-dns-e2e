@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
@@ -15,14 +15,7 @@ import (
 )
 
 const (
-	// lenZones is the number of zones to provision
-	lenZones = 1
-	// lenPrivateZones is the number of private zones to provision
-	lenPrivateZones = 1
-)
-
-var (
-	self *appsv1.Deployment = nil
+	linkName = "sample-link-name"
 )
 
 func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) (Provisioned, *logger.LoggedError) {
@@ -37,7 +30,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	}
 
 	var err error
-	ret.ResourceGroup, err = clients.NewResourceGroup(ctx, subscriptionId, i.ResourceGroup, i.Location, clients.DeleteAfterOpt(2*time.Hour))
+	ret.ResourceGroup, err = clients.NewResourceGroup(ctx, subscriptionId, i.ResourceGroup, i.Location, clients.DeleteAfterOpt(4*time.Hour))
 
 	if err != nil {
 		return Provisioned{}, logger.Error(lgr, fmt.Errorf("creating resource group %s: %w", i.ResourceGroup, err))
@@ -46,8 +39,51 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	// create resources
 	var resEg errgroup.Group
 
+	var subnetId string
+	var vnetId string
+
 	resEg.Go(func() error {
-		ret.Cluster, err = clients.NewAks(ctx, subscriptionId, i.ResourceGroup, "cluster"+i.Suffix, i.Location, i.McOpts...)
+		zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, publicZoneName)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating zone: %w", err))
+		}
+		ret.Zones = append(ret.Zones, zone)
+		return nil
+	})
+
+	resEg.Go(func() error {
+		privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, privateZoneName)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating private zone: %w", err))
+		}
+		ret.PrivateZones = append(ret.PrivateZones, privateZone)
+		return nil
+	})
+
+	if err := resEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
+
+	//create vnet and link
+	resEg.Go(func() error {
+		vnetId, subnetId, err = clients.NewVnet(ctx, subscriptionId, i.ResourceGroup, i.Location, ret.PrivateZones[0].GetName())
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating vnet: %w", err))
+		}
+
+		err = ret.PrivateZones[0].LinkVnet(ctx, linkName, vnetId)
+		if err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating vnet link: %w", err))
+		}
+		return nil
+	})
+
+	if err := resEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
+
+	resEg.Go(func() error {
+		ret.Cluster, err = clients.NewAks(ctx, subscriptionId, i.ResourceGroup, "cluster"+i.Suffix, i.Location, subnetId, i.McOpts...)
 
 		if err != nil {
 			return logger.Error(lgr, fmt.Errorf("creating managed cluster: %w", err))
@@ -59,51 +95,6 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	if err := resEg.Wait(); err != nil {
 		return Provisioned{}, logger.Error(lgr, err)
 	}
-
-	//Add dns zone resource- Currently creating 1 private zone and 1 public zone
-	for idx := 0; idx < lenZones; idx++ {
-		func(idx int) {
-			resEg.Go(func() error {
-				zone, err := clients.NewZone(ctx, subscriptionId, i.ResourceGroup, "testing-public-zone")
-				if err != nil {
-					return logger.Error(lgr, fmt.Errorf("creating zone: %w", err))
-				}
-				ret.Zones = append(ret.Zones, zone)
-				return nil
-			})
-		}(idx)
-	}
-	for idx := 0; idx < lenPrivateZones; idx++ {
-		func(idx int) {
-			resEg.Go(func() error {
-				privateZone, err := clients.NewPrivateZone(ctx, subscriptionId, i.ResourceGroup, "testing-private-zone")
-				if err != nil {
-					return logger.Error(lgr, fmt.Errorf("creating private zone: %w", err))
-				}
-				ret.PrivateZones = append(ret.PrivateZones, privateZone)
-				return nil
-			})
-		}(idx)
-	}
-
-	//Container registry to push e2e tests
-	resEg.Go(func() error {
-		ret.ContainerRegistry, err = clients.NewAcr(ctx, subscriptionId, i.ResourceGroup, "registry"+i.Suffix, i.Location)
-		if err != nil {
-			return logger.Error(lgr, fmt.Errorf("creating container registry: %w", err))
-		}
-
-		// resEg.Go(func() error {
-		// 	e2eRepoAndTag := "e2e:" + i.Suffix
-		// 	if err := ret.ContainerRegistry.BuildAndPush(ctx, e2eRepoAndTag, "."); err != nil {
-		// 		return logger.Error(lgr, fmt.Errorf("building and pushing e2e image: %w", err))
-		// 	}
-		// 	ret.E2eImage = ret.ContainerRegistry.GetName() + ".azurecr.io/" + e2eRepoAndTag
-		// 	return nil
-		// })
-
-		return nil
-	})
 
 	//setting permissions for private zones
 	var permEg errgroup.Group
@@ -146,24 +137,50 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 		}(z)
 	}
 
-	//put in errgroups?
+	permEg.Go(func() error {
+		principalId := ret.Cluster.GetPrincipalId()
+
+		if vnetId == "" || subnetId == "" {
+			return logger.Error(lgr, fmt.Errorf("vnet id is empty before role assignment"))
+		}
+
+		//Adding network contributor role on the vnet
+		role := clients.NetworkContributorRole
+		if _, err := clients.NewRoleAssignment(ctx, subscriptionId, vnetId, principalId, role); err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
+		}
+
+		//Adding network contributor role on the subnet
+		if _, err := clients.NewRoleAssignment(ctx, subscriptionId, subnetId, principalId, role); err != nil {
+			return logger.Error(lgr, fmt.Errorf("creating %s role assignment: %w", role.Name, err))
+		}
+		return nil
+	})
+
+	if err := permEg.Wait(); err != nil {
+		return Provisioned{}, logger.Error(lgr, err)
+	}
+
 	//Deploy external dns
 	err = deployExternalDNS(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying external dns onto cluster %w", err))
 	}
 
-	//Create Nginx service
-	err = deployNginx(ctx, ret)
+	ipv4Service, ipv6Service, err := deployNginx(ctx, ret)
 	if err != nil {
 		return ret, logger.Error(lgr, fmt.Errorf("error deploying nginx onto cluster %w", err))
 	}
+
+	ret.Ipv4ServiceName = ipv4Service.Name
+	ret.Ipv6ServiceName = ipv6Service.Name
 
 	return ret, nil
 }
 
 func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, error) {
 	lgr := logger.FromContext(context.Background())
+
 	lgr.Info("starting to provision all infrastructure")
 	defer lgr.Info("finished provisioning all infrastructure")
 
@@ -196,10 +213,7 @@ func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, erro
 }
 
 // Creates Nginx deployment and service for testing
-func deployNginx(ctx context.Context, p Provisioned) error {
-
-	fmt.Println("Inside deploy Nginx function")
-
+func deployNginx(ctx context.Context, p Provisioned) (*corev1.Service, *corev1.Service, error) {
 	var objs []client.Object
 
 	lgr := logger.FromContext(ctx).With("infra", p.Name)
@@ -207,32 +221,39 @@ func deployNginx(ctx context.Context, p Provisioned) error {
 	defer lgr.Info("finished deploying nginx resources")
 
 	nginxDeployment := clients.NewNginxDeployment()
-	nginxService := clients.NewNginxService()
+	ipv4Service, ipv6Service := clients.NewNginxServices(p.Zones[0].GetName())
 	objs = append(objs, nginxDeployment)
-	objs = append(objs, nginxService)
+	objs = append(objs, ipv4Service)
+	objs = append(objs, ipv6Service)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
-		fmt.Println("Error Deploying Nginx resources")
-		return logger.Error(lgr, err)
+		lgr.Error("Error deploying Nginx resources ")
+		return ipv4Service, ipv6Service, logger.Error(lgr, err)
 	}
 
-	return nil
+	return ipv4Service, ipv6Service, nil
 
 }
 
 // Deploys ExternalDNS onto cluster
 func deployExternalDNS(ctx context.Context, p Provisioned) error {
-
 	lgr := logger.FromContext(ctx).With("infra", p.Name)
 	lgr.Info("deploying external DNS onto cluster")
 	defer lgr.Info("finished deploying ext DNS")
 
-	exConfig := manifests.GetExampleConfigs()[0]
+	publicZoneName := p.Zones[0].GetName()
+	privateZoneName := p.PrivateZones[0].GetName()
 
-	objs := manifests.ExternalDnsResources(exConfig.Conf, exConfig.Deploy, exConfig.DnsConfigs)
+	publicDnsConfig := manifests.GetPublicDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), publicZoneName)
+	privateDnsConfig := manifests.GetPrivateDnsConfig(p.TenantId, p.SubscriptionId, p.ResourceGroup.GetName(), privateZoneName)
+
+	exConfig := manifests.SetExampleConfig(p.Cluster.GetClientId(), p.Cluster.GetId(), publicDnsConfig, privateDnsConfig)
+	currentConfig := exConfig[0] //currently only using one config from external_dns_config.go
+
+	objs := manifests.ExternalDnsResources(currentConfig.Conf, currentConfig.Deploy, currentConfig.DnsConfigs)
 
 	if err := p.Cluster.Deploy(ctx, objs); err != nil {
-		fmt.Println("Error Deploying External DNS")
+		lgr.Error("Error Deploying External DNS")
 		return logger.Error(lgr, err)
 	}
 

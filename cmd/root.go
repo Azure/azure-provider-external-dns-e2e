@@ -6,7 +6,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "e2e",
-	Short: "e2e tests for the AKS App Routing Operator",
+	Short: "e2e tests for the Azure Provider for External DNS",
 }
 
 func Execute() error {

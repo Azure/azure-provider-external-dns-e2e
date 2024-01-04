@@ -1,13 +1,16 @@
 package infra
 
 import (
-	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 	"github.com/google/uuid"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 )
 
 var (
-	rg       = "sample3-routing-e2e" + uuid.New().String()
-	location = "westus"
+	rg              = "externalDns-e2e" + uuid.New().String()
+	location        = "westus"
+	publicZoneName  = "public-zone-" + uuid.NewString()
+	privateZoneName = "private-zone-" + uuid.NewString()
 )
 
 // Infras is a list of infrastructure configurations the e2e tests will run against
@@ -37,6 +40,5 @@ func (i infras) FilterNames(names []string) infras {
 			}
 		}
 	}
-
 	return ret
 }

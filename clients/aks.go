@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/logger"
-	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
@@ -18,13 +16,13 @@ import (
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/logger"
+	"github.com/Azure/azure-provider-external-dns-e2e/manifests"
 )
 
 var (
-	// https://kubernetes.io/docs/concepts/workloads/
-	// more specifically, these are compatible with kubectl rollout status
-	workloadKinds = []string{"Deployment", "StatefulSet", "DaemonSet"}
-
+	workloadKinds   = []string{"Deployment", "StatefulSet", "DaemonSet"}
 	nonZeroExitCode = errors.New("non-zero exit code")
 )
 
@@ -75,13 +73,13 @@ func LoadAks(id azure.Resource, dnsServiceIp, location, principalId, clientId st
 	}
 }
 
-func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location string, mcOpts ...McOpt) (*aks, error) {
+func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location string, subnetId string, mcOpts ...McOpt) (*aks, error) {
 	lgr := logger.FromContext(ctx).With("name", name, "resourceGroup", resourceGroup, "location", location)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("starting to create aks")
 	defer lgr.Info("finished creating aks")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -101,10 +99,11 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 			NodeResourceGroup: to.Ptr(truncate("MC_"+name, 80)),
 			AgentPoolProfiles: []*armcontainerservice.ManagedClusterAgentPoolProfile{
 				{
-					Name:   to.Ptr("default"),
-					VMSize: to.Ptr("Standard_DS3_v2"),
-					Count:  to.Ptr(int32(2)),
-					Mode:   to.Ptr(armcontainerservice.AgentPoolModeSystem),
+					Name:         to.Ptr("default"),
+					VMSize:       to.Ptr("Standard_DS3_v2"),
+					Count:        to.Ptr(int32(2)),
+					Mode:         to.Ptr(armcontainerservice.AgentPoolModeSystem),
+					VnetSubnetID: to.Ptr(subnetId),
 				},
 			},
 			AddonProfiles: map[string]*armcontainerservice.ManagedClusterAddonProfile{
@@ -114,6 +113,10 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 						"enableSecretRotation": to.Ptr("true"),
 					},
 				},
+			},
+			NetworkProfile: &armcontainerservice.NetworkProfile{
+				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginKubenet),
+				IPFamilies:    []*armcontainerservice.IPFamily{to.Ptr(armcontainerservice.IPFamilyIPv4), to.Ptr(armcontainerservice.IPFamilyIPv6)},
 			},
 		},
 	}
@@ -189,6 +192,10 @@ func (a *aks) Deploy(ctx context.Context, objs []client.Object) error {
 	}
 	encoded := base64.StdEncoding.EncodeToString(zip)
 	fi, err := os.Create("./manifests.zip")
+	if err != nil {
+		lgr.Error("Error creating manifests.zip")
+		return err
+	}
 	fi.Write(zip)
 
 	if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
@@ -228,28 +235,6 @@ func zipManifests(objs []client.Object) ([]byte, error) {
 	}
 	zipWriter.Close()
 	return b.Bytes(), nil
-}
-
-func (a *aks) Clean(ctx context.Context, objs []client.Object) error {
-	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
-	ctx = logger.WithContext(ctx, lgr)
-	lgr.Info("starting to clean resources")
-	defer lgr.Info("finished cleaning resources")
-
-	zip, err := zipManifests(objs)
-	if err != nil {
-		return fmt.Errorf("zipping manifests: %w", err)
-	}
-	encoded := base64.StdEncoding.EncodeToString(zip)
-
-	if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
-		Command: to.Ptr("kubectl delete -f manifests/ --ignore-not-found=true"),
-		Context: &encoded,
-	}, runCommandOpts{}); err != nil {
-		return fmt.Errorf("running kubectl delete: %w", err)
-	}
-
-	return nil
 }
 
 func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
@@ -313,10 +298,14 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 						if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
 							Command: to.Ptr(fmt.Sprintf("kubectl wait --for=condition=complete --timeout=5s job/%s -n %s", obj.GetName(), ns)),
 						}, runCommandOpts{}); err == nil {
+
 							break // job is complete
 						} else {
+							//coming here
 							if !errors.Is(err, nonZeroExitCode) { // if the job is not complete, we will get a non-zero exit code
+
 								getLogsFn()
+
 								return fmt.Errorf("waiting for job/%s to complete: %w", obj.GetName(), err)
 							}
 						}
@@ -325,7 +314,9 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 						if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
 							Command: to.Ptr(fmt.Sprintf("kubectl wait --for=condition=failed --timeout=5s job/%s -n %s", obj.GetName(), ns)),
 						}, runCommandOpts{}); err == nil {
+
 							getLogsFn()
+
 							return fmt.Errorf("job/%s failed", obj.GetName())
 						}
 					}
@@ -359,7 +350,7 @@ func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCom
 	lgr.Info("starting to run command")
 	defer lgr.Info("finished running command")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -412,7 +403,7 @@ func (a *aks) GetCluster(ctx context.Context) (*armcontainerservice.ManagedClust
 	lgr.Info("starting to get aks")
 	defer lgr.Info("finished getting aks")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return nil, fmt.Errorf("getting az credentials: %w", err)
 	}
@@ -436,7 +427,7 @@ func (a *aks) GetVnetId(ctx context.Context) (string, error) {
 	lgr.Info("starting to get vnet id for aks")
 	defer lgr.Info("finished getting vnet id for aks")
 
-	cred, err := getAzCred()
+	cred, err := GetAzCred()
 	if err != nil {
 		return "", fmt.Errorf("getting az credentials: %w", err)
 	}
