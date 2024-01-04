@@ -42,7 +42,7 @@ jobs:
 
       - name: Provision Infrastructure
         shell: bash
-        run: (go run ./main.go infra --subscription="${{ secrets.AZURE_SUBSCRIPTION_ID }}" --tenant="${{ secrets.AZURE_TENANT_ID }}" --names="${{ inputs.name }}" --infra-file="./infra.json")
+        run: (go run ./main.go infra --subscription="${{ secrets.AZURE_SUBSCRIPTION_ID }}" --tenant="${{ secrets.AZURE_TENANT_ID }}" --names="${{ inputs.name }}" --infra-file="./infraFolder/infra.json")
         if: # avoids race condition security vulnerability by ensuring we are only running changes that were /ok-to-test'd
           (github.event_name == 'repository_dispatch' &&
           github.event.client_payload.slash_command.args.named.sha != '' &&
