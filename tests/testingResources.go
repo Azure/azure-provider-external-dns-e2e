@@ -54,21 +54,6 @@ func AnnotateService(ctx context.Context, subId, clusterName, rg, serviceName st
 		}
 	}
 
-	//TODO: uncomment later?
-	// serviceObj, err := getServiceObj(ctx, subId, rg, clusterName, serviceName)
-	// if err != nil {
-	// 	return fmt.Errorf("error getting service object after annotating")
-	// }
-
-	// //check that annotation was saved
-	// savedAnnotations := serviceObj.Annotations
-	// for key, value := range annMap {
-	// 	val, exists := savedAnnotations[key]
-	// 	if !exists || val != value {
-	// 		return fmt.Errorf("service annotation was not saved")
-	// 	}
-	// }
-
 	return nil
 
 }
@@ -115,7 +100,7 @@ func ClearAnnotations(ctx context.Context, subId, clusterName, rg, serviceName s
 }
 
 // Checks to see that external dns pod is running
-func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, clusterName, provider string) error {
+func WaitForExternalDns(ctx context.Context, numSeconds time.Duration, subId, rg, clusterName, provider string) error {
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
 	lgr.Info("Checking/ Waiting for external dns pod to run")
@@ -139,11 +124,15 @@ func WaitForExternalDns(ctx context.Context, timeout time.Duration, subId, rg, c
 	}
 
 	var extDNSReady bool = true
+	timeout := time.Now().Add(numSeconds * time.Second)
 	if deploy.Status.AvailableReplicas < 1 {
 		var i int = 0
 		for deploy.Status.AvailableReplicas < 1 {
+			if time.Now().After(timeout) {
+				return fmt.Errorf("external DNS deployment not ready after %s seconds", numSeconds)
+			}
 			lgr.Info("======= ExternalDNS not available, checking again in %s seconds ====", timeout)
-			time.Sleep(timeout) //TODO: check this logic
+			time.Sleep(2 * time.Second)
 			i++
 
 			if i >= 5 {

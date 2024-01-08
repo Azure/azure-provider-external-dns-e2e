@@ -48,21 +48,6 @@ var PrivateClusterOpt = McOpt{
 	},
 }
 
-var OsmClusterOpt = McOpt{
-	Name: "osm cluster",
-	fn: func(mc *armcontainerservice.ManagedCluster) error {
-		if mc.Properties.AddonProfiles == nil {
-			mc.Properties.AddonProfiles = map[string]*armcontainerservice.ManagedClusterAddonProfile{}
-		}
-
-		mc.Properties.AddonProfiles["openServiceMesh"] = &armcontainerservice.ManagedClusterAddonProfile{
-			Enabled: to.Ptr(true),
-		}
-
-		return nil
-	},
-}
-
 type Identifier interface {
 	GetId() string
 }
@@ -70,7 +55,6 @@ type Identifier interface {
 type cluster interface {
 	GetVnetId(ctx context.Context) (string, error)
 	Deploy(ctx context.Context, objs []client.Object) error
-	Clean(ctx context.Context, objs []client.Object) error
 	GetPrincipalId() string
 	GetClientId() string
 	GetLocation() string

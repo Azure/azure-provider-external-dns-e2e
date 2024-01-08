@@ -1,0 +1,3 @@
+remove this file
+Just needed to be able to commit this folder
+This folder is necessary to store infra.json in github workflow

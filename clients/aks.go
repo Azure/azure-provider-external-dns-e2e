@@ -237,28 +237,6 @@ func zipManifests(objs []client.Object) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (a *aks) Clean(ctx context.Context, objs []client.Object) error {
-	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
-	ctx = logger.WithContext(ctx, lgr)
-	lgr.Info("starting to clean resources")
-	defer lgr.Info("finished cleaning resources")
-
-	zip, err := zipManifests(objs)
-	if err != nil {
-		return fmt.Errorf("zipping manifests: %w", err)
-	}
-	encoded := base64.StdEncoding.EncodeToString(zip)
-
-	if err := a.runCommand(ctx, armcontainerservice.RunCommandRequest{
-		Command: to.Ptr("kubectl delete -f manifests/ --ignore-not-found=true"),
-		Context: &encoded,
-	}, runCommandOpts{}); err != nil {
-		return fmt.Errorf("running kubectl delete: %w", err)
-	}
-
-	return nil
-}
-
 func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
