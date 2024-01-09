@@ -1,14 +1,15 @@
 package pkgManifests
 
 import (
-	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/pkgResources/config"
 )
 
-const operatorName = "aks-app-routing-operator"
+const operatorName = "externalDNS"
 
 // GetTopLevelLabels returns labels that every resource App Routing manages have
 func GetTopLevelLabels() map[string]string { // this is a function to avoid any accidental mutation due to maps being reference types
@@ -41,26 +42,6 @@ func namespace(conf *config.Config) *corev1.Namespace {
 	}
 
 	return ns
-}
-
-func withPodRefEnvVars(contain *corev1.Container) *corev1.Container {
-	copy := contain.DeepCopy()
-	copy.Env = append(copy.Env, corev1.EnvVar{
-		Name: "POD_NAME",
-		ValueFrom: &corev1.EnvVarSource{
-			FieldRef: &corev1.ObjectFieldSelector{
-				FieldPath: "metadata.name",
-			},
-		},
-	}, corev1.EnvVar{
-		Name: "POD_NAMESPACE",
-		ValueFrom: &corev1.EnvVarSource{
-			FieldRef: &corev1.ObjectFieldSelector{
-				FieldPath: "metadata.namespace",
-			},
-		},
-	})
-	return copy
 }
 
 func withTypicalReadinessProbe(port int, contain *corev1.Container) *corev1.Container {
@@ -139,13 +120,4 @@ func WithPreferSystemNodes(spec *corev1.PodSpec) *corev1.PodSpec {
 	})
 
 	return copy
-}
-
-func addComponentLabel(originalLabels map[string]string, componentName string) map[string]string {
-	tr := make(map[string]string)
-	for k, v := range originalLabels {
-		tr[k] = v
-	}
-	tr["app.kubernetes.io/component"] = componentName
-	return tr
 }

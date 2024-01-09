@@ -4,31 +4,14 @@
 package util
 
 import (
-	"context"
-	"flag"
 	"math/rand"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var patchType = client.Merge
-
-func Upsert(ctx context.Context, c client.Client, res client.Object) error {
-	// Use server-side apply to update resources and fall back to merge patch when
-	// using fake clients in unit tests since they don't support SSA
-	if flag.Lookup("test.v") == nil {
-		patchType = client.Apply
-	}
-
-	err := c.Patch(ctx, res, patchType, client.FieldOwner("aks-app-routing-operator"), client.ForceOwnership)
-	if errors.IsNotFound(err) {
-		err = c.Create(ctx, res)
-	}
-	return err
-}
 
 // UseServerSideApply allows tests to require the server side apply patch strategy.
 // Useful in cases where a real client that supports it is used.

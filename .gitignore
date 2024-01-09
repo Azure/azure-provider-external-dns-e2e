@@ -36,4 +36,7 @@ coverage.out
 
 #files generated in code
 infra-config.json
-job-app-routing-operator-e2e.log 
+*.txt
+
+#infra.json is stored in the infrafolder in the github workflow
+infrafolder/infra.json

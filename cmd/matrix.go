@@ -3,9 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Azure/azure-provider-external-dns-e2e/github"
 	"github.com/Azure/azure-provider-external-dns-e2e/infra"
-	"github.com/spf13/cobra"
 )
 
 func init() {

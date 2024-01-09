@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 	"github.com/spf13/cobra"
+
+	"github.com/Azure/azure-provider-external-dns-e2e/infra"
 )
 
 func init() {
@@ -53,7 +54,6 @@ var infraCmd = &cobra.Command{
 		if _, err := file.Write(bytes); err != nil {
 			return fmt.Errorf("writing infrastructure config: %w", err)
 		}
-		fmt.Println("finished writing infrastructure config")
 
 		return nil
 	},

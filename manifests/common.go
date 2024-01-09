@@ -3,7 +3,6 @@ package manifests
 import (
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -18,7 +17,7 @@ import (
 const (
 	ManagedByKey = "app.kubernetes.io/managed-by"
 	// ManagedByVal is the value for the ManagedByKey label on all resources directly managed by our e2e tester
-	ManagedByVal = "app-routing-operator-e2e"
+	ManagedByVal = "externalDNS-e2e"
 )
 
 var (
@@ -44,67 +43,4 @@ func MarshalJson(obj client.Object) ([]byte, error) {
 	}
 
 	return yml, nil
-}
-
-func setGroupKindVersion(obj client.Object) {
-	gvks, _, err := scheme.ObjectKinds(obj)
-	if err != nil {
-		return
-	}
-
-	if len(gvks) == 0 {
-		return
-	}
-
-	obj.GetObjectKind().SetGroupVersionKind(gvks[0])
-}
-
-// newGoDeployment creates a new basic Go deployment with a single main.go file from contents
-func newGoDeployment(contents, namespace, name string) *appsv1.Deployment {
-	command := []string{
-		"/bin/sh",
-		"-c",
-		"mkdir source && cd source && go mod init source && echo '" + contents + "' > main.go && go mod tidy && go run main.go",
-	}
-
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels: map[string]string{
-				ManagedByKey: ManagedByVal,
-			},
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: to.Ptr(int32(1)),
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": name},
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels:      map[string]string{"app": name},
-					Annotations: map[string]string{},
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{
-						Name:    "container",
-						Image:   "mcr.microsoft.com/oss/go/microsoft/golang:1.20",
-						Command: command,
-					}},
-				},
-			},
-		},
-	}
-}
-
-// UncollisionedNs returns a namespace with a guaranteed unique name after creating the namespace
-func UncollisionedNs() *corev1.Namespace {
-	return &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "app-routing-e2e-",
-			Labels: map[string]string{
-				ManagedByKey: ManagedByVal,
-			},
-		},
-	}
 }
