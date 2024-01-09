@@ -31,7 +31,7 @@ func init() {
 
 }
 
-// Sets variables used by all tests
+// Sets global variables used by all tests
 func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Setting objects for testing")
@@ -72,6 +72,8 @@ func SetObjectsForTesting(ctx context.Context, infra infra.Provisioned) error {
 	return nil
 }
 
+// Called on a suite of tests, runs each test individually, not in parallel
+// Basic and private dns suites share resources (dns zones, services, etc.) and thus cannot be run in parallel
 func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Starting to run all tests in suite")
@@ -103,6 +105,7 @@ func (allTests Ts) Run(ctx context.Context, infra infra.Provisioned) error {
 	return nil
 }
 
+// Retrieves service object based on service name
 func getServiceObj(ctx context.Context, subId, rg, clusterName, serviceName string) (*corev1.Service, error) {
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)

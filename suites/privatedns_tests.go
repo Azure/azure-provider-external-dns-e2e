@@ -23,7 +23,7 @@ func privateDnsSuite(in infra.Provisioned) []test {
 			name: "private DNS +  A Record",
 			run: func(ctx context.Context) error {
 				lgr := logger.FromContext(ctx)
-				if err := PrivateARecordTest(ctx, in, false); err != nil {
+				if err := PrivateARecordTest(ctx, in); err != nil {
 					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 					return err
 				}
@@ -36,7 +36,7 @@ func privateDnsSuite(in infra.Provisioned) []test {
 			name: "private DNS +  AAAA Record",
 			run: func(ctx context.Context) error {
 				lgr := logger.FromContext(ctx)
-				if err := PrivateAAAATest(ctx, in, false); err != nil {
+				if err := PrivateAAAATest(ctx, in); err != nil {
 					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv4Service.Name)
 					tests.ClearAnnotations(ctx, in.SubscriptionId, *tests.ClusterName, in.ResourceGroup.GetName(), tests.Ipv6Service.Name)
 					return err
@@ -50,7 +50,9 @@ func privateDnsSuite(in infra.Provisioned) []test {
 	}
 }
 
-var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
+// Tests whether external-dns is able to create an A record in a private dns zone
+// If test fails because a record was not created, annotations are removed, else it will delete the created record set, clear annotations, and return a nil error
+var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
@@ -62,8 +64,8 @@ var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, useP
 		return fmt.Errorf("error: %s", err)
 	}
 
-	//Validating Records
-	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeA, tests.ResourceGroup, tests.SubId, *tests.ClusterName, tests.PrivateZone, 150, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
+	//Checking Azure DNS for A record
+	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeA, tests.ResourceGroup, tests.SubId, *tests.ClusterName, tests.PrivateZone, 100, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeA)
 	} else {
@@ -79,7 +81,9 @@ var PrivateARecordTest = func(ctx context.Context, infra infra.Provisioned, useP
 	return nil
 }
 
-var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned, usePublicZone bool) error {
+// Tests whether external-dns is able to create an AAAA record in a private dns zone
+// If test fails because a record was not created, annotations are removed, else it will delete the created record set, clear annotations, and return a nil error
+var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting test")
 
@@ -91,16 +95,15 @@ var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned, usePubl
 		return fmt.Errorf("error: %s", err)
 	}
 
-	time.Sleep(100 * time.Second)
-	//Validating records
-	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeAAAA, tests.ResourceGroup, tests.SubId, *tests.ClusterName, tests.PrivateZone, 80, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
+	// Checking Azure DNS for AAAA record, currently taking about 60 seconds to create AAAA record
+	err = validatePrivateRecords(ctx, armprivatedns.RecordTypeAAAA, tests.ResourceGroup, tests.SubId, *tests.ClusterName, tests.PrivateZone, 70, tests.Ipv6Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Private Record not created in Azure DNS", armdns.RecordTypeAAAA)
 	} else {
 		lgr.Info("Test Passed: Private Dns + AAAA record test successfully")
 	}
 
-	//Deleting A and AAAA record sets
+	//Test Passed, deleting AAAA record set
 	err = tests.DeleteRecordSet(ctx, *tests.ClusterName, tests.SubId, tests.ResourceGroup, tests.PrivateZone, "", armprivatedns.RecordTypeAAAA)
 	if err != nil {
 		lgr.Error("Error deleting AAAA record set")
@@ -111,6 +114,7 @@ var PrivateAAAATest = func(ctx context.Context, infra infra.Provisioned, usePubl
 
 }
 
+// Checks Azure DNS for specified record, returns an error if record was not detected in the specified time
 func validatePrivateRecords(ctx context.Context, recordType armprivatedns.RecordType, rg, subscriptionId, clusterName, serviceDnsZoneName string, numSeconds time.Duration, svcIp string) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("Checking that Record was created in Azure DNS")
@@ -133,6 +137,7 @@ func validatePrivateRecords(ctx context.Context, recordType armprivatedns.Record
 
 	timeout := time.Now().Add(numSeconds * time.Second)
 	var pageValue []*armprivatedns.RecordSet
+
 	for {
 		if time.Now().After(timeout) {
 			return fmt.Errorf("record not created within %s seconds", numSeconds)

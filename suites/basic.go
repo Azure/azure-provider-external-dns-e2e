@@ -51,6 +51,8 @@ func basicSuite(in infra.Provisioned) []test {
 	}
 }
 
+// Tests whether external-dns is able to create an A record in a public dns zone
+// If test fails because a record was not created, annotations are removed, else it will delete the created record set, clear annotations, and return a nil error
 var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting public dns + A record test")
@@ -66,7 +68,7 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 		return fmt.Errorf("error: %s", err)
 	}
 
-	//checking to see if A record was created in Azure DNS
+	//Checking to see if A record was created in Azure DNS
 	err = validateRecord(ctx, armdns.RecordTypeA, tests.ResourceGroup, tests.SubId, *tests.ClusterName, tests.PublicZone, 150, tests.Ipv4Service.Status.LoadBalancer.Ingress[0].IP)
 	if err != nil {
 		return fmt.Errorf("%s Record not created in Azure DNS", armdns.RecordTypeA)
@@ -74,7 +76,7 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 		lgr.Info("Test Passed: Public dns + A record")
 	}
 
-	//test passed, deleting created record set
+	//Test passed, deleting created record set
 	err = tests.DeleteRecordSet(ctx, *tests.ClusterName, tests.SubId, tests.ResourceGroup, tests.PublicZone, armdns.RecordTypeA, "")
 	if err != nil {
 		lgr.Error("Error deleting A record set")
@@ -83,6 +85,8 @@ var ARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	return nil
 }
 
+// Tests whether external-dns is able to create an AAAA record in a public dns zone
+// If test fails because a record was not created, annotations are removed, else it will delete the created record set, clear annotations, and return a nil error
 var AAAARecordTest = func(ctx context.Context, infra infra.Provisioned) error {
 	lgr := logger.FromContext(ctx)
 	lgr.Info("starting public dns + AAAA test")

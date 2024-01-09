@@ -38,6 +38,7 @@ type runCommandOpts struct {
 	outputFile string
 }
 
+// Annotates a service object with the given key-value pair in annotation map parameter
 func AnnotateService(ctx context.Context, subId, clusterName, rg, serviceName string, annMap map[string]string) error {
 	lgr := logger.FromContext(ctx).With("name", clusterName, "resourceGroup", rg)
 	ctx = logger.WithContext(ctx, lgr)
@@ -170,6 +171,7 @@ func PrivateDnsAnnotations(ctx context.Context, subId, clusterName, rg, serviceN
 
 }
 
+// RunCommand is used to get status or update values of pods and services running in the cluster
 func RunCommand(ctx context.Context, subId, rg, clusterName string, request armcontainerservice.RunCommandRequest, opt runCommandOpts) (armcontainerservice.CommandResultProperties, error) {
 	lgr := logger.FromContext(ctx)
 	ctx = logger.WithContext(ctx, lgr)
