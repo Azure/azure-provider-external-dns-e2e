@@ -26,7 +26,7 @@ var (
 	nonZeroExitCode = errors.New("non-zero exit code")
 )
 
-// aks struct contains properties of the provisioned cluster. This struct is loaded from the infrastructure file
+// aks struct contains properties of the provisioned cluster. This struct is loaded from the infrastructure file.
 type aks struct {
 	name, subscriptionId, resourceGroup string
 	id                                  string
