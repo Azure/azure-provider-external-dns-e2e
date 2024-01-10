@@ -1,33 +1,38 @@
-# Project
+# ExternalDNS E2E tests
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+## What is ExternalDNS?
+ExternalDNS allows kubernetes services to be discorvered by public DNS servers. We can configure a service so it has direct access to your own DNS provider, such as Azure DNS 
 
-As the maintainer of this project, please make a few updates:
+ExternalDNS works by scaning the service's current config on specific tags which will tell the ExternalDNS service that it should update Azure DNS with the provided URI in the tag.
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+The test plan for the tests, along with more detailed steps on provisioning and testing on infrastructure can be found [here](https://msazure.visualstudio.com/CloudNativeCompute/_wiki/wikis/personalplayground?wikiVersion=GBmain&pagePath=/Manasa%20Chinta/External%252Ddns%20e2e%20testing&pageId=598453&_a=edit).
+The source code for external-dns can be found [here](https://github.com/kubernetes-sigs/external-dns).
+Tutorial for the Azure Provider for externalDNS can be found [here](https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/azure.md).
+## Steps for running tests locally:
+(started by calling infra command under cmd/ folder)
 
-## Contributing
+<b>Run e2e locally with the following steps: </b>
+- Ensure you've copied the .env.example file to .env and filled in the values. You can replace the `INFRA_NAMES` value in the .env file with the name of any infrastructure defined in infra/infras.go to test different scenarios. `"basic cluster"` and `"private cluster."` 
+- Run `make e2e`. This runs the infra command then the test command
+   - The resources provisoned are written to a .json file (infra_config.json if running locally, infra.json is the default for workflows).
+   - You can tell if a test has passed by searching for "passed" in the logs printed to the terminal.
+   - Current tests create A and AAAA records in public and private dns zones
+- To run tests on a different version of external-dns, modify the version in the deployment spec in external_dns.go -> newExternalDNSDeployment() function:
+    ![alt text](/images/extdns-version.jpg "external dns version modification") 
+***
+<b>Note:</b>
+- Infrastructures are defined in /infra/infras.go. Add any new AKS cluster configurations here.
+- Tests are defined in /suites. Add any new tests here. If multiple suites are needed, they should be added to/suites/all.go so that they are run.
+***
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+## Running tests through github workflows
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+Github workflows are set up to run and require passing E2E tests on every PR. 
+The e2ev2-provision-test.yaml Github Workflow will provision and run tests on both infras.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+If a step fails you have a few options for debugging.
 
-## Trademarks
+- Read the logs printed to the console. Look for error-level logs
+- Connect to the Kubernetes cluster and dig around manually. The logs should include information on the cluster name, resource group, and subscription that you can use to connect to the cluster.
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+
