@@ -18,6 +18,8 @@ const (
 	linkName = "sample-link-name"
 )
 
+// Provisions all infrastructure needed to run e2e tests: resource group, managed cluster, dns zones, and a vnet
+// Also deploys external dns and two nginx services needed for testing
 func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) (Provisioned, *logger.LoggedError) {
 	lgr := logger.FromContext(ctx).With("infra", i.Name)
 	lgr.Info("provisioning infrastructure")
@@ -178,6 +180,7 @@ func (i *infra) Provision(ctx context.Context, tenantId, subscriptionId string) 
 	return ret, nil
 }
 
+// Calls Provision function above on every type of infra specified in command line
 func (is infras) Provision(tenantId, subscriptionId string) ([]Provisioned, error) {
 	lgr := logger.FromContext(context.Background())
 

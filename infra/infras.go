@@ -6,6 +6,7 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 )
 
+// Default values used for infrastructure, can be modified if needed
 var (
 	rg              = "externalDns-e2e" + uuid.New().String()
 	location        = "westus"
@@ -30,6 +31,7 @@ var Infras = infras{
 	},
 }
 
+// Filters out infrastructure not specified in command line args and returns a list of infras to run tests against
 func (i infras) FilterNames(names []string) infras {
 	ret := infras{}
 	for _, infra := range i {

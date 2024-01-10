@@ -47,7 +47,7 @@ func NewNginxDeployment() *appsv1.Deployment {
 	}
 }
 
-// Returns nginx services with annotations necessary to create ipv4 and ipv6 records
+// Returns nginx services with necessary config to create ipv4 and ipv6 records
 func NewNginxServices(zoneName string) (*corev1.Service, *corev1.Service) {
 	ipv4Service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{

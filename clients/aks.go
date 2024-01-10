@@ -26,6 +26,7 @@ var (
 	nonZeroExitCode = errors.New("non-zero exit code")
 )
 
+// aks struct contains properties of the provisioned cluster. This struct is loaded from the infrastructure file
 type aks struct {
 	name, subscriptionId, resourceGroup string
 	id                                  string
@@ -59,6 +60,7 @@ var PrivateClusterOpt = McOpt{
 	},
 }
 
+// Retrieves objects from infastructure file to create aks instance
 func LoadAks(id azure.Resource, dnsServiceIp, location, principalId, clientId string, options map[string]struct{}) *aks {
 	return &aks{
 		name:           id.ResourceName,
@@ -73,6 +75,7 @@ func LoadAks(id azure.Resource, dnsServiceIp, location, principalId, clientId st
 	}
 }
 
+// Creates a new public or private cluster based on mcOpt provided, saves properties in aks struct
 func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location string, subnetId string, mcOpts ...McOpt) (*aks, error) {
 	lgr := logger.FromContext(ctx).With("name", name, "resourceGroup", resourceGroup, "location", location)
 	ctx = logger.WithContext(ctx, lgr)
@@ -95,7 +98,7 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 			Type: to.Ptr(armcontainerservice.ResourceIdentityTypeSystemAssigned),
 		},
 		Properties: &armcontainerservice.ManagedClusterProperties{
-			DNSPrefix:         to.Ptr("approutinge2e"),
+			DNSPrefix:         to.Ptr("extdnse2e"),
 			NodeResourceGroup: to.Ptr(truncate("MC_"+name, 80)),
 			AgentPoolProfiles: []*armcontainerservice.ManagedClusterAgentPoolProfile{
 				{
@@ -180,6 +183,7 @@ func NewAks(ctx context.Context, subscriptionId, resourceGroup, name, location s
 	}, nil
 }
 
+// Deploys a given client.Object to cluster
 func (a *aks) Deploy(ctx context.Context, objs []client.Object) error {
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
@@ -237,6 +241,7 @@ func zipManifests(objs []client.Object) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// Waits for given given pods, workloads, and jobs to complete
 func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)
@@ -338,12 +343,14 @@ func (a *aks) waitStable(ctx context.Context, objs []client.Object) error {
 	return nil
 }
 
+// Allows you to pass in a outputfile to write the logs from runCommand()
 type runCommandOpts struct {
 	// outputFile is the file to write the output of the command to. Useful for saving logs from a job or something similar
 	// where there's lots of logs that are extremely important and shouldn't be muddled up in the rest of the logs.
 	outputFile string
 }
 
+// Runs given request on the cluster, writes logs to file if outputFile is specified via runCommandOpts
 func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCommandRequest, opt runCommandOpts) error {
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup, "command", *request.Command)
 	ctx = logger.WithContext(ctx, lgr)
@@ -397,6 +404,7 @@ func (a *aks) runCommand(ctx context.Context, request armcontainerservice.RunCom
 	return nil
 }
 
+// Returns the provisioned aks cluster
 func (a *aks) GetCluster(ctx context.Context) (*armcontainerservice.ManagedCluster, error) {
 	lgr := logger.FromContext(ctx).With("name", a.name, "resourceGroup", a.resourceGroup)
 	ctx = logger.WithContext(ctx, lgr)

@@ -9,6 +9,7 @@ import (
 
 var cred azcore.TokenCredential
 
+// Uses NewAzureCLICredential, returns creds used to provision all infrastructure and create clients used in tests
 func GetAzCred() (azcore.TokenCredential, error) {
 	if cred != nil {
 		return cred, nil

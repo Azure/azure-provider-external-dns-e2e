@@ -83,6 +83,8 @@ type resourceGroup interface {
 	Identifier
 }
 
+// Provisioned is a struct that contains all the resources provisioned in by the infra command (provision.go)
+// Configuration is saved in this struct when reading from infrastructure configuration .json file
 type Provisioned struct {
 	Name            string
 	Cluster         cluster

@@ -20,6 +20,7 @@ func init() {
 	rootCmd.AddCommand(testCmd)
 }
 
+// Reads from saved infrastructure configuration file and runs e2e tests, returns errors propagated from failed tests
 var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Runs e2e tests",

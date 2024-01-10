@@ -9,7 +9,7 @@ import (
 	"github.com/Azure/azure-provider-external-dns-e2e/clients"
 )
 
-// Translate to .json for infra-config.json
+// Used to save provisioned infrastructure to .json file, used by ToLoadable() and called from the infra command
 func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 	cluster, err := azure.ParseResourceID(p.Cluster.GetId())
 	if err != nil {
@@ -61,6 +61,7 @@ func (p Provisioned) Loadable() (LoadableProvisioned, error) {
 
 }
 
+// Returns LoadableProvisioned struct to be saved to infrastructure .json file
 func ToLoadable(p []Provisioned) ([]LoadableProvisioned, error) {
 	ret := make([]LoadableProvisioned, len(p))
 	for i, provisioned := range p {
@@ -73,6 +74,7 @@ func ToLoadable(p []Provisioned) ([]LoadableProvisioned, error) {
 	return ret, nil
 }
 
+// Loads Provisioned struct from infrastructure .json file
 func ToProvisioned(l []LoadableProvisioned) ([]Provisioned, error) {
 	ret := make([]Provisioned, len(l))
 	for i, loadable := range l {
@@ -85,7 +87,7 @@ func ToProvisioned(l []LoadableProvisioned) ([]Provisioned, error) {
 	return ret, nil
 }
 
-// Loads Provisioned struct from infra-config.json
+// Used to load Provisioned struct from infra-config.json or other specified infrastructure .json file
 func (l LoadableProvisioned) Provisioned() (Provisioned, error) {
 
 	zs := make([]zone, len(l.Zones))

@@ -19,6 +19,7 @@ var (
 	tenantId       string
 )
 
+// Saves tenantId and subscriptionId, used in provisioning infrastructure in infra command
 func setupSubTenantFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&subscriptionId, subscriptionIdFlag, "", "subscription")
 	cmd.MarkFlagRequired(subscriptionIdFlag)
@@ -41,6 +42,7 @@ var (
 	infraNames []string
 )
 
+// Saves infraNames from command line or INFRA_NAMES specified in .env file
 func setupInfraNamesFlag(cmd *cobra.Command) {
 	cmd.Flags().StringArrayVar(&infraNames, infraNamesFlag, []string{}, "infrastructure names to provision, if empty will provision all")
 }
@@ -49,6 +51,7 @@ var (
 	infraFile string
 )
 
+// Saves infra file name which provisioned infrastructure will be saved to and read from
 func setupInfraFileFlag(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&infraFile, infraFileFlag, "./infra-config.json", "file to load infrastructure from")
 }

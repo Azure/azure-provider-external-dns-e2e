@@ -19,6 +19,7 @@ type rg struct {
 
 type RgOpt func(rg *armresources.ResourceGroup) error
 
+// Used for testing purposes: deletes resource group after specified duration
 func DeleteAfterOpt(d time.Duration) RgOpt {
 	return func(rg *armresources.ResourceGroup) error {
 		if rg.Tags == nil {
@@ -32,6 +33,7 @@ func DeleteAfterOpt(d time.Duration) RgOpt {
 	}
 }
 
+// Called when loading provisioned infrastructure from .json file, returns an rg struct
 func LoadRg(id arm.ResourceID) *rg {
 	return &rg{
 		id:   id.String(),
@@ -39,6 +41,7 @@ func LoadRg(id arm.ResourceID) *rg {
 	}
 }
 
+// Creates a new resource group with specified options vis rgOpts. Location used by all resources is specified in infra > infras.go
 func NewResourceGroup(ctx context.Context, subscriptionId, name, location string, rgOpts ...RgOpt) (*rg, error) {
 	lgr := logger.FromContext(ctx).With("name", name, "location", location, "subscriptionId", subscriptionId)
 	ctx = logger.WithContext(ctx, lgr)

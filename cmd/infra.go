@@ -17,6 +17,7 @@ func init() {
 	rootCmd.AddCommand(infraCmd)
 }
 
+// Infra Command sets provisions infrastructure and saves the configuration to an infrastructure configuration file
 var infraCmd = &cobra.Command{
 	Use:   "infra",
 	Short: "Sets up infrastructure for e2e tests",

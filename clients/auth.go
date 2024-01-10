@@ -19,6 +19,8 @@ type Role struct {
 	Id string
 }
 
+// Roles which must be assigned to provisoned public dns zone, private dns zone, and vnet respectively
+
 var (
 	DnsContributorRole = Role{
 		Name: "DNS Zone Contributor",
@@ -36,6 +38,7 @@ var (
 
 type roleAssignment struct{}
 
+// Returns a new role assignment to assign to a provisoined infra using the provisioned cluster's principal id
 func NewRoleAssignment(ctx context.Context, subscriptionId, scope, principalId string, role Role) (*roleAssignment, error) {
 	lgr := logger.FromContext(ctx).With("role", role.Name, "subscriptionId", subscriptionId, "scope", scope, "principalId", principalId)
 	ctx = logger.WithContext(ctx, lgr)
