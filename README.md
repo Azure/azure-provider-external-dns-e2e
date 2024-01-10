@@ -30,9 +30,11 @@ Tutorial for the Azure Provider for externalDNS can be found [here](https://gith
 Github workflows are set up to run and require passing E2E tests on every PR. 
 The e2ev2-provision-test.yaml Github Workflow will provision and run tests on both infras.
 
+A successful build will show the e2ev2, status, and validation-tests jobs completed on the left
+![alt text](/images/workflow-success.jpg "external dns version modification") 
 If a step fails you have a few options for debugging.
 
-- Read the logs printed to the console. Look for error-level logs
+- Read the logs printed under the provision or test steps.
 - Connect to the Kubernetes cluster and dig around manually. The logs should include information on the cluster name, resource group, and subscription that you can use to connect to the cluster.
 
 
