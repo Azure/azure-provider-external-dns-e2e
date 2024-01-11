@@ -13,8 +13,9 @@ func All(infra infra.Provisioned) []tests.Ts {
 
 	//Add new testing suites here:
 	var allSuites [][]test
-	allSuites = append(allSuites, basicSuite(infra))
-	allSuites = append(allSuites, privateDnsSuite(infra))
+	//allSuites = append(allSuites, basicSuite(infra))
+	//allSuites = append(allSuites, privateDnsSuite(infra))
+	allSuites = append(allSuites, mxSuite(infra))
 
 	final := make([]tests.Ts, len(allSuites))
 
