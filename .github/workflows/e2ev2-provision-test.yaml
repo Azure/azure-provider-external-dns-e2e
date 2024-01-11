@@ -2,7 +2,7 @@ name: E2E Version 2 Provision and Test
 
 on:
   schedule:
-    - cron: "*/3 * * * *"
+    - cron: "*/40 * * * *"
   workflow_call:
     inputs:
       ref:
