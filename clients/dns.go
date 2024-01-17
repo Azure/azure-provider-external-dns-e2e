@@ -46,6 +46,7 @@ func LoadZone(id azure.Resource, nameservers []string) *zone {
 }
 
 // Returns a private or public zone (based on zoneOpts) with the given name, creates and returns zone struct or an error if one occurred
+// comment
 func NewZone(ctx context.Context, subscriptionId, resourceGroup, name string, zoneOpts ...ZoneOpt) (*zone, error) {
 	name = nonAlphanumericRegex.ReplaceAllString(name, "")
 	name = name + ".com"
