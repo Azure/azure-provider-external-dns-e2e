@@ -1,8 +1,6 @@
 name: E2E Version 2 Test Matrix
 
 on:
-  schedule:
-    - cron: '0 */12 * * *'
   workflow_call:
     inputs:
       ref:
