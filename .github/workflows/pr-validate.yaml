@@ -1,7 +1,5 @@
 name: Validate PR Run every 5mins?
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   push:
     branches: [ main ]
   pull_request:
