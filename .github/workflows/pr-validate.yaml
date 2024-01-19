@@ -1,4 +1,4 @@
-name: Validate PR
+name: Validate PR --
 on:
   schedule:
     - cron: '*/5 * * * *'
@@ -34,16 +34,21 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            var ref;  
+            const url = `${process.env.server_url}/${process.env.repo}/actions/runs/${process.env.run_id}`
             if (context.eventName == 'pull_request') {
-              const url = `${process.env.server_url}/${process.env.repo}/actions/runs/${process.env.run_id}`
+              ref = pull.head.sha;
               const { data: pull } = await github.rest.pulls.get({
                 ...context.repo,
                 pull_number: process.env.number
               });
               console.log('retrieved pull request')
-              
-              const ref = pull.head.sha;
-              const { data: result } = await github.rest.checks.create({
+            }
+            
+            if (context.eventName == 'schedule') {
+              ref = context.sha;
+            } 
+            const { data: result } = await github.rest.checks.create({
                 ...context.repo,
                 name: process.env.validate_job_name,
                 head_sha: ref,
@@ -53,19 +58,5 @@ jobs:
               });
               console.log('created check')
               return result;
-            }
-            if (context.eventName == 'schedule') {
-              const url = `${process.env.server_url}/${process.env.repo}/actions/runs/${process.env.run_id}`
-              const { data: result } = await github.rest.checks.create({
-                ...context.repo,
-                name: process.env.validate_job_name,
-                head_sha: context.sha,
-                status: 'completed',
-                conclusion: process.env.conclusion,
-                details_url: url,
-              });
-              console.log('created check')
-              return result;
-            } 
 
             
