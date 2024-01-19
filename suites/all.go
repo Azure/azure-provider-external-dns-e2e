@@ -10,7 +10,6 @@ import (
 
 // All returns all test in all suites
 func All(infra infra.Provisioned) []tests.Ts {
-
 	//Add new testing suites here:
 	var allSuites [][]test
 	allSuites = append(allSuites, basicSuite(infra))
