@@ -9,6 +9,7 @@ import (
 )
 
 // All returns all test in all suites
+// comment
 func All(infra infra.Provisioned) []tests.Ts {
 	//Add new testing suites here:
 	var allSuites [][]test
