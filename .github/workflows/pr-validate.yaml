@@ -37,18 +37,19 @@ jobs:
             var ref;  
             const url = `${process.env.server_url}/${process.env.repo}/actions/runs/${process.env.run_id}`
             if (context.eventName == 'pull_request') {
-              ref = pull.head.sha;
               const { data: pull } = await github.rest.pulls.get({
                 ...context.repo,
                 pull_number: process.env.number
               });
               console.log('retrieved pull request')
+              ref = pull.head.sha;
             }
             
             if (context.eventName == 'schedule') {
               ref = context.sha;
             } 
-            const { data: result } = await github.rest.checks.create({
+            if (ref != null) {
+              const { data: result } = await github.rest.checks.create({
                 ...context.repo,
                 name: process.env.validate_job_name,
                 head_sha: ref,
@@ -58,5 +59,7 @@ jobs:
               });
               console.log('created check')
               return result;
+            }
+            
 
             
