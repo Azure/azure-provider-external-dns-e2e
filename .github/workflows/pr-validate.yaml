@@ -16,9 +16,7 @@ jobs:
     uses: ./.github/workflows/e2ev2-matrix.yaml
     secrets: inherit
   status:
-    permissions:
-      checks: write
-      pull-requests: write
+    permissions: read-all
     needs: [e2eV2]
     runs-on: ubuntu-latest
     steps:
