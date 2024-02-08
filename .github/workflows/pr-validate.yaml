@@ -1,4 +1,4 @@
-name: Validate PR
+name: Validate PR --
 on:
   schedule:
     - cron: '*/5 * * * *'
@@ -16,7 +16,10 @@ jobs:
     uses: ./.github/workflows/e2ev2-matrix.yaml
     secrets: inherit
   status:
-    permissions: read-all
+    permissions:
+      id-token: write
+      checks: write
+      pull-requests: write
     needs: [e2eV2]
     runs-on: ubuntu-latest
     steps:
