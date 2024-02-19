@@ -19,11 +19,11 @@ jobs:
   provision:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: '~1.20.3'
           cache-dependency-path: "**/*.sum"
@@ -50,13 +50,13 @@ jobs:
           inputs.skipRefCheck
 
       - name: Ensure ref
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: ${{ !((github.event_name == 'repository_dispatch' && github.event.client_payload.slash_command.args.named.sha != '' && contains(github.event.client_payload.pull_request.head.sha, github.event.client_payload.slash_command.args.named.sha)) || inputs.skipRefCheck) }}
         with:
           script: core.setFailed('Ref is not latest')
 
       - name: Upload infra file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: infra
           path: infrafolder/infra.json
@@ -73,7 +73,7 @@ jobs:
           go-version: '~1.20.3'
 
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v1.6.1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -95,7 +95,7 @@ jobs:
           inputs.skipRefCheck
 
       - name: Ensure ref
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: ${{ !((github.event_name == 'repository_dispatch' && github.event.client_payload.slash_command.args.named.sha != '' && contains(github.event.client_payload.pull_request.head.sha, github.event.client_payload.slash_command.args.named.sha)) || inputs.skipRefCheck) }}
         with:
           script: core.setFailed('Ref is not latest')
